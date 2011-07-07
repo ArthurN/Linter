@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="linter" default="compile" basedir=".">
+	<description>
+		Linter -- a web page media and metadata scraper
+    </description>
+
+	<property file="build.properties" />
+	<property name="jar.output" value="${jar.dir}/${ant.project.name}-${version}.jar" />
+
+	<!-- ================================= target: compile ================================= -->
+	<target name="compile" description="Compile all sources" depends="clean, resolve">
+		<mkdir dir="${classes.dir}"/>
+	    <javac destdir="${classes.dir}">
+	        <classpath>
+	            <fileset dir="${lib.dir}">
+	                <include name="**/*.jar"/>
+	            </fileset>
+	        </classpath>
+	        <src path="${src.dir}" />
+	    </javac>
+	</target>
+
+	<!-- ================================= target: resolve ================================= -->
+	<target name="resolve" description="Retrieve dependencies with Ivy into lib dir">
+		<ivy:settings />
+		<ivy:retrieve />
+	</target>
+	
+	<!-- ================================= target: jar ================================= -->
+	<target name="jar" description="Package the library into a JAR" depends="compile">
+	    <mkdir dir="${jar.dir}" />
+		
+	    <jar destfile="${jar.output}">
+	    	<fileset dir="${classes.dir}"/>
+	    	<manifest>
+		    	<attribute name="Build-Version" value="${version}"/>
+	    	</manifest>
+	    </jar>	    
+	</target>
+	
+	<!-- ================================= target: publish ================================= -->
+	<target name="publish" depends="jar" description="Publish this project in the shared repository">
+		<ivy:publish artifactspattern="${jar.dir}/[artifact]-[revision].[ext]" resolver="local" overwrite="true" pubrevision="${version}" status="release"/>
+	</target>
+		
+	<!-- ================================= target: clean ================================= -->
+	<target name="clean" description="Clean up classes and jar dirs">
+	    <delete dir="${classes.dir}"/>
+	    <delete dir="${jar.dir}"/>
+		<delete dir="${lib.dir}"/>
+	</target>
+
+	<!-- ================================= target: full-clean ================================= -->
+	<target name="full-clean" description="Clean up including Ivy cache and lib dir" depends="clean">
+		<ivy:cleancache />
+	</target>
+</project>

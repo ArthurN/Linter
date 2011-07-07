@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivysettings>
+	<settings defaultResolver="localAndMaven" />
+
+	<property name="repository.dir" value="${user.home}/.crowdspoke/ivy-repo" />
+
+	<resolvers>
+		<chain name="localAndMaven">
+			<filesystem name="local">
+				<ivy pattern="${repository.dir}/[module]/ivy-[revision].xml" />
+				<artifact pattern="${repository.dir}/[module]/[artifact]-[revision].[ext]" />
+			</filesystem>
+			<ibiblio name="maven" m2compatible="true" />
+		</chain>
+	</resolvers>
+</ivysettings>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-module version="2.0">
+    <info organisation="com.linter" module="linter"/>
+    
+    <configurations defaultconfmapping="default->default">
+        <conf name="default" />
+	</configurations>
+	
+	<publications>
+    	<artifact name="linter" type="jar"  conf="default" ext="jar"/>    	
+    </publications>
+    
+    <dependencies>
+		<dependency org="log4j" name="log4j" rev="1.2.16" />		
+    </dependencies>
+</ivy-module>
