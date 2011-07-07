@@ -1,0 +1,8 @@
+.DS_Store
+*.class
+*.tmp
+*.out
+*.log
+lib/
+bin/
+eclipse-bin/
