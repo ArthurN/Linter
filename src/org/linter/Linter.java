@@ -1,4 +1,4 @@
-package com.linter;
+package org.linter;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;

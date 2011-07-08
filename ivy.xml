@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0">
-    <info organisation="com.linter" module="linter"/>
+    <info organisation="org.linter" module="linter"/>
     
     <configurations defaultconfmapping="default->default">
         <conf name="default" />

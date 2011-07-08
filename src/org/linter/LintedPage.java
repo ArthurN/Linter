@@ -1,4 +1,4 @@
-package com.linter;
+package org.linter;
 
 import java.net.MalformedURLException;
 import java.net.URL;
