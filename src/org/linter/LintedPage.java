@@ -23,10 +23,29 @@ public class LintedPage {
 	
 	private TagNode _node;
 	
+	/**
+	 * Create a blank linted page, expects you to call {@link process} at some point 
+	 * @param originalUrl - the URL to be processed
+	 */
 	public LintedPage(String originalUrl) {
 		_originalUrl = originalUrl;
 	}
 	
+	/**
+	 * Creates a linted page assuming the original URL and all aliases have alrady been processed. 
+	 * This is useful in the case where you want to resolve URLs first, prior to additional scraping, e.g. to
+	 * check a cache or database.  
+	 * @param originalUrl - the original URL
+	 * @param aliases - any aliases (the last one must be the final destination URL), or null
+	 */
+	public LintedPage(String originalUrl, String[] aliases) {
+		_originalUrl = originalUrl;
+		_aliases = aliases;
+	}
+	
+	/***
+	 * Process the original URL, including alias resolution, scraping and metadata extraction
+	 */
 	void process() {
 		final long startTime = System.nanoTime();
 		final long endTime;
@@ -49,6 +68,13 @@ public class LintedPage {
 		if (aliases != null && aliases.size() > 0)
 			_aliases = aliases.toArray(new String[0]);
 		
+		scrapeMetadata();
+	}
+	
+	/**
+	 * Scrapes the metadata on this page (can be called separately from {@link process}
+	 */
+	public void scrapeMetadata() {
 		logger.debug("Scraping & cleaning HTML...");
 		HtmlCleaner cleaner = new HtmlCleaner();
 		try {
@@ -131,7 +157,7 @@ public class LintedPage {
 	 * @return
 	 */
 	public String getDestinationUrl() {
-		if (_aliases.length == 0)
+		if (_aliases == null || _aliases.length == 0)
 			return _originalUrl;
 		else
 			// The last alias should be the final URL
@@ -182,7 +208,7 @@ public class LintedPage {
 		sb.append(" {\n");
 		sb.append("\tPARSE OK:\t\t"); sb.append(this.getParseOk()); sb.append('\n');
 		sb.append("\tALIASES:");
-			if (_aliases.length == 0)
+			if (_aliases == null || _aliases.length == 0)
 				sb.append("\t\tNONE\n");
 			else {
 				sb.append('\n');

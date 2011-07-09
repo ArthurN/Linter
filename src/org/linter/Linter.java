@@ -30,7 +30,12 @@ public class Linter {
 		LintedPage lp;
 		for (int i = 0; i < args.length; i++)
 		{
-			lp = Linter.processUrl(args[i]);
+			//lp = Linter.processUrl(args[i]);
+			
+			ArrayList<String> aliases = Linter.expandShortenedUrls(args[i]);
+			lp = new LintedPage(args[i], aliases.toArray(new String[0]));
+			lp.scrapeMetadata();
+			
 			System.out.println(lp.toDebugString());
 		}
 	}
