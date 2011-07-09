@@ -43,6 +43,16 @@ public class LintedPage {
 		_aliases = aliases;
 	}
 	
+	/**
+	 * Same as LintedPage with String[]-based <code>aliases</code>, but automatically does conversion from ArrayList
+	 * @param originalUrl
+	 * @param aliases
+	 */
+	public LintedPage(String originalUrl, ArrayList<String> aliases) {
+		_originalUrl = originalUrl;
+		_aliases = aliases.toArray(new String[0]);
+	}
+	
 	/***
 	 * Process the original URL, including alias resolution, scraping and metadata extraction
 	 */
