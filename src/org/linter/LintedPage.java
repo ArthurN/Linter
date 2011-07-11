@@ -1,6 +1,9 @@
 package org.linter;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.Proxy;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
@@ -15,6 +18,7 @@ public class LintedPage {
 	private boolean _parseOk = false;
 	private String _originalUrl;
 	private String[] _aliases = {};
+	private String _destinationUrl;
 	private String _title;
 	private String _description;
 	private String _favIconUrl;
@@ -29,28 +33,6 @@ public class LintedPage {
 	 */
 	public LintedPage(String originalUrl) {
 		_originalUrl = originalUrl;
-	}
-	
-	/**
-	 * Creates a linted page assuming the original URL and all aliases have alrady been processed. 
-	 * This is useful in the case where you want to resolve URLs first, prior to additional scraping, e.g. to
-	 * check a cache or database.  
-	 * @param originalUrl - the original URL
-	 * @param aliases - any aliases (the last one must be the final destination URL), or null
-	 */
-	public LintedPage(String originalUrl, String[] aliases) {
-		_originalUrl = originalUrl;
-		_aliases = aliases;
-	}
-	
-	/**
-	 * Same as LintedPage with String[]-based <code>aliases</code>, but automatically does conversion from ArrayList
-	 * @param originalUrl
-	 * @param aliases
-	 */
-	public LintedPage(String originalUrl, ArrayList<String> aliases) {
-		_originalUrl = originalUrl;
-		_aliases = aliases.toArray(new String[0]);
 	}
 	
 	/***
@@ -74,18 +56,63 @@ public class LintedPage {
 		logger.info("Processing URL: " + _originalUrl);
 		
 		logger.debug("Expanding any shortened URLs...");
-		ArrayList<String> aliases = Linter.expandShortenedUrls(_originalUrl);
-		if (aliases != null && aliases.size() > 0)
-			_aliases = aliases.toArray(new String[0]);
+		followUrlRedirects();
 		
+		logger.debug("Scraping & cleaning HTML...");
 		scrapeMetadata();
+	}
+	
+	/***
+	 * Follows the originalUrl to its destination, saving any aliases along the way. This is useful to expand
+	 * URL shortening services.
+	 * @return True if successful, false otherwise
+	 */
+	public boolean followUrlRedirects() {
+		ArrayList<String> aliases = new ArrayList<String>();
+		
+		String nextLocation = _originalUrl;
+		String lastLocation = nextLocation;
+		
+		while (nextLocation != null) {
+			try {
+				URL url = new URL(nextLocation);
+				
+				logger.trace("Following " + nextLocation + "...");
+				
+				HttpURLConnection connection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
+				connection.setInstanceFollowRedirects(false);
+				connection.setRequestMethod("HEAD");
+				connection.setConnectTimeout(Linter.HTTP_CONNECT_TIMEOUT);
+				connection.connect();
+				
+				nextLocation = connection.getHeaderField("Location");
+				if (nextLocation != null) {
+					logger.trace("Discovered redirect to " + nextLocation);
+					aliases.add(lastLocation);
+					lastLocation = nextLocation;
+				} else {
+					logger.trace("URL resolved to its destination");
+					_destinationUrl = lastLocation;
+				}
+				connection.disconnect();
+			} catch (MalformedURLException ex) {
+				logger.error("Invalid URL [" + nextLocation + "]: " + ex.getMessage());
+				return false;
+			} catch (IOException ioe) {
+				logger.error("IO Exception [" + nextLocation + "]: " + ioe.getMessage());
+				return false;
+			}
+		}
+		
+		_aliases = aliases.toArray(new String[0]);
+
+		return true;
 	}
 	
 	/**
 	 * Scrapes the metadata on this page (can be called separately from {@link process}
 	 */
 	public void scrapeMetadata() {
-		logger.debug("Scraping & cleaning HTML...");
 		HtmlCleaner cleaner = new HtmlCleaner();
 		try {
 			_node = cleaner.clean(new URL(this.getDestinationUrl()));
@@ -167,11 +194,7 @@ public class LintedPage {
 	 * @return
 	 */
 	public String getDestinationUrl() {
-		if (_aliases == null || _aliases.length == 0)
-			return _originalUrl;
-		else
-			// The last alias should be the final URL
-			return _aliases[_aliases.length - 1];
+		return _destinationUrl;
 	}
 	
 	/***

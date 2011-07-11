@@ -1,12 +1,5 @@
 package org.linter;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.Proxy;
-import java.net.URL;
-import java.util.ArrayList;
-
 import org.apache.log4j.Logger;
 
 public class Linter {
@@ -30,12 +23,7 @@ public class Linter {
 		LintedPage lp;
 		for (int i = 0; i < args.length; i++)
 		{
-			//lp = Linter.processUrl(args[i]);
-			
-			ArrayList<String> aliases = Linter.expandShortenedUrls(args[i]);
-			lp = new LintedPage(args[i], aliases.toArray(new String[0]));
-			lp.scrapeMetadata();
-			
+			lp = Linter.processUrl(args[i]);			
 			System.out.println(lp.toDebugString());
 		}
 	}
@@ -46,47 +34,5 @@ public class Linter {
 		return lp;
 	}
 	
-	/***
-	 * Follows URLs starting from address and returns a list of aliases (hops), with the last one being the destination. If the returned
-	 * ArrayList of aliases has no entries, then the source address is the destination address. This method will return null
-	 * on an error.
-	 * @param address - The source URL 
-	 * @return an ArrayList of aliases from the source URL to the destination (including the destination)
-	 */
-	public static ArrayList<String> expandShortenedUrls(String address) {
-		ArrayList<String> aliases = new ArrayList<String>();
-		
-		String locationRedirect = address;
-		
-		while (locationRedirect != null) {
-			try {
-				URL url = new URL(locationRedirect);
-				
-				logger.trace("Following " + locationRedirect + "...");
-				
-				HttpURLConnection connection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
-				connection.setInstanceFollowRedirects(false);
-				connection.setRequestMethod("HEAD");
-				connection.setConnectTimeout(Linter.HTTP_CONNECT_TIMEOUT);
-				connection.connect();
-				
-				locationRedirect = connection.getHeaderField("Location");
-				if (locationRedirect != null) {
-					logger.debug("Discovered redirect to " + locationRedirect);
-					aliases.add(locationRedirect);
-				} else {
-					logger.debug("URL resolved to its destination");
-				}
-				connection.disconnect();
-			} catch (MalformedURLException ex) {
-				logger.error("Invalid URL [" + locationRedirect + "]: " + ex.getMessage());
-				return null;
-			} catch (IOException ioe) {
-				logger.error("IO Exception [" + locationRedirect + "]: " + ioe.getMessage());
-				return null;
-			}
-		}
-		
-		return aliases;
-	}
+	
 }
