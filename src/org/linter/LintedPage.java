@@ -131,7 +131,7 @@ public class LintedPage {
 				_title = ((TagNode)titleNodes[0]).getText().toString().trim();
 			}
 		} catch (Exception e) {
-			logger.warn("Error extracting the page title: " + e.toString());
+			logger.trace("[" + this.getDestinationUrl() + "] Could not extract the page title");
 		}
 		
 		// Page description
@@ -141,7 +141,7 @@ public class LintedPage {
 				_description = ((TagNode)descNodes[0]).getAttributeByName("content").trim();
 			}
 		} catch (Exception e) {
-			logger.warn("Error extracting the page description: " + e.toString());
+			logger.trace("[" + this.getDestinationUrl() + "] Could not extract the page description");
 		}
 		
 		// Fav icon
@@ -151,7 +151,7 @@ public class LintedPage {
 				_favIconUrl = ((TagNode)favIconNodes[0]).getAttributeByName("href").trim();
 			}
 		} catch (Exception e) {
-			logger.warn("Error extracting the favicon URL: " + e.toString());
+			logger.trace("[" + this.getDestinationUrl() + "] Could not extract the fav icon URL");
 		}
 		
 		_parseOk = true;
