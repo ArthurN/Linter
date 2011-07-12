@@ -83,6 +83,7 @@ public class LintedPage {
 				connection.setInstanceFollowRedirects(false);
 				connection.setRequestMethod("HEAD");
 				connection.setConnectTimeout(Linter.HTTP_CONNECT_TIMEOUT);
+				connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401"); // Do as if you're using Firefox 3.6.3 on Windows
 				connection.connect();
 				
 				nextLocation = connection.getHeaderField("Location");
