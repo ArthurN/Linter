@@ -16,6 +16,8 @@ public class LintedPage {
 	static private Logger logger = Logger.getLogger(LintedPage.class);
 	
 	private boolean _parseOk = false;
+	private String _parseError;
+	
 	private String _originalUrl;
 	private String[] _aliases = {};
 	private String _destinationUrl;
@@ -56,10 +58,10 @@ public class LintedPage {
 		logger.info("Processing URL: " + _originalUrl);
 		
 		logger.debug("Expanding any shortened URLs...");
-		followUrlRedirects();
-		
-		logger.debug("Scraping & cleaning HTML...");
-		scrapeMetadata();
+		if (followUrlRedirects()) {
+			logger.debug("Scraping & cleaning HTML...");
+			scrapeMetadata();
+		}
 	}
 	
 	/***
@@ -81,7 +83,7 @@ public class LintedPage {
 				
 				HttpURLConnection connection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
 				connection.setInstanceFollowRedirects(false);
-				connection.setRequestMethod("HEAD");
+				connection.setRequestMethod("HEAD"); // only want the headers
 				connection.setConnectTimeout(Linter.HTTP_CONNECT_TIMEOUT);
 				connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401"); // Do as if you're using Firefox 3.6.3 on Windows
 				connection.connect();
@@ -97,10 +99,12 @@ public class LintedPage {
 				}
 				connection.disconnect();
 			} catch (MalformedURLException ex) {
-				logger.error("Invalid URL [" + nextLocation + "]: " + ex.getMessage());
+				logger.error("Invalid URL [" + nextLocation + "]: " + ex);
+				_parseError = ex.toString();
 				return false;
 			} catch (IOException ioe) {
-				logger.error("IO Exception [" + nextLocation + "]: " + ioe.getMessage());
+				logger.error("IO Exception [" + nextLocation + "]: " + ioe);
+				_parseError = ioe.toString();
 				return false;
 			}
 		}
@@ -119,9 +123,11 @@ public class LintedPage {
 			_node = cleaner.clean(new URL(this.getDestinationUrl()));
 		} catch (MalformedURLException mue) {
 			logger.error("Invalid URL [" + this.getDestinationUrl() + "]: " + mue.toString());
+			_parseError = mue.toString();
 			return;
 		} catch (Exception ex) {
 			logger.error("Unable to scrape and clean HTML: " + ex.toString());
+			_parseError = ex.toString();
 			return;
 		}
 
@@ -166,6 +172,14 @@ public class LintedPage {
 		return _parseOk;
 	}
 	
+	/**
+	 * The error message we encountered during parsing, if any
+	 * @return
+	 */
+	public String getParseError() {
+		return _parseError;
+	}
+	
 	/***
 	 * Returns the original URL (before any shortened URLs were expanded)
 	 * @return
@@ -195,6 +209,10 @@ public class LintedPage {
 	 * @return
 	 */
 	public String getDestinationUrl() {
+		// If we failed to parse, the destination URL might not be set, so let's just make it the original URL since
+		// that's the best we can do.
+		if (_destinationUrl == null && !getParseOk())
+			_destinationUrl = _originalUrl;
 		return _destinationUrl;
 	}
 	
