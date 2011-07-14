@@ -1,12 +1,16 @@
 package org.linter;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.Inflater;
+import java.util.zip.InflaterInputStream;
 
 import org.apache.log4j.Logger;
 import org.htmlcleaner.HtmlCleaner;
@@ -14,6 +18,9 @@ import org.htmlcleaner.TagNode;
 
 public class LintedPage {
 	static private Logger logger = Logger.getLogger(LintedPage.class);
+	
+	public static final String HTTP_USER_AGENT = "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401"; // Firefox 3.6 on Windows
+	public static final int HTTP_CONNECT_TIMEOUT = 5000;	// 5 sec
 	
 	private boolean _parseOk = false;
 	private String _parseError;
@@ -84,8 +91,8 @@ public class LintedPage {
 				HttpURLConnection connection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
 				connection.setInstanceFollowRedirects(false);
 				connection.setRequestMethod("HEAD"); // only want the headers
-				connection.setConnectTimeout(Linter.HTTP_CONNECT_TIMEOUT);
-				connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401"); // Do as if you're using Firefox 3.6.3 on Windows
+				connection.setConnectTimeout(LintedPage.HTTP_CONNECT_TIMEOUT);
+				connection.setRequestProperty("User-Agent", LintedPage.HTTP_USER_AGENT);
 				connection.connect();
 				
 				nextLocation = connection.getHeaderField("Location");
@@ -118,9 +125,34 @@ public class LintedPage {
 	 * Scrapes the metadata on this page (can be called separately from {@link process}
 	 */
 	public void scrapeMetadata() {
+		InputStream inStr = null;
+		try {
+			URL url = new URL(this.getDestinationUrl());
+			HttpURLConnection connection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
+			connection.setConnectTimeout(LintedPage.HTTP_CONNECT_TIMEOUT);
+			connection.setRequestProperty("User-Agent", LintedPage.HTTP_USER_AGENT);
+			connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
+			
+			String encoding = connection.getContentEncoding();
+	
+			if (encoding != null && encoding.equalsIgnoreCase("gzip")) {
+			    inStr = new GZIPInputStream(connection.getInputStream());
+			} else if (encoding != null && encoding.equalsIgnoreCase("deflate")) {
+			    inStr = new InflaterInputStream(connection.getInputStream(),
+			      new Inflater(true));
+			} else {
+			    inStr = connection.getInputStream();
+			}
+		} catch (Exception ex) {
+			logger.error("Unable to download page [" + this.getDestinationUrl() + "]: " + ex);
+			_parseError = ex.toString();
+			return;
+		}
+		
+		
 		HtmlCleaner cleaner = new HtmlCleaner();
 		try {
-			_node = cleaner.clean(new URL(this.getDestinationUrl()));
+			_node = cleaner.clean(inStr);
 		} catch (MalformedURLException mue) {
 			logger.error("Invalid URL [" + this.getDestinationUrl() + "]: " + mue.toString());
 			_parseError = mue.toString();

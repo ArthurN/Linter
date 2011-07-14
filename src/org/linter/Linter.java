@@ -5,9 +5,6 @@ import org.apache.log4j.Logger;
 public class Linter {
 	static private Logger logger = Logger.getLogger(Linter.class);
 	
-	public static final int HTTP_CONNECT_TIMEOUT = 5000;	// 5 sec
-	
-	
 	/***
 	 * Run Linter as a command-line to optionally test URLs via CLI
 	 * @param args The URLs to resolve
