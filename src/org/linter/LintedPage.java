@@ -19,7 +19,7 @@ import org.htmlcleaner.TagNode;
 public class LintedPage {
 	static private Logger logger = Logger.getLogger(LintedPage.class);
 	
-	public static final String HTTP_USER_AGENT = "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401"; // Firefox 3.6 on Windows
+	public static final String HTTP_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:5.0.1) Gecko/20100101 Firefox/5.0.1"; // Firefox 5.0.1 on Snow Leopard
 	public static final int HTTP_CONNECT_TIMEOUT = 5000;	// 5 sec
 	
 	private boolean _parseOk = false;
@@ -79,38 +79,48 @@ public class LintedPage {
 	public boolean followUrlRedirects() {
 		ArrayList<String> aliases = new ArrayList<String>();
 		
-		String nextLocation = _originalUrl;
-		String lastLocation = nextLocation;
+		String currentLocation = _originalUrl;
+		String lastLocation = null;
 		
-		while (nextLocation != null) {
+		while (currentLocation != null) {
 			try {
-				URL url = new URL(nextLocation);
+				URL url = new URL(currentLocation);
 				
-				logger.trace("Following " + nextLocation + "...");
+				logger.trace("Following " + currentLocation + "...");
 				
 				HttpURLConnection connection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
 				connection.setInstanceFollowRedirects(false);
 				connection.setRequestMethod("HEAD"); // only want the headers
 				connection.setConnectTimeout(LintedPage.HTTP_CONNECT_TIMEOUT);
 				connection.setRequestProperty("User-Agent", LintedPage.HTTP_USER_AGENT);
+				if (lastLocation != null)
+					connection.setRequestProperty("Referer", lastLocation);
 				connection.connect();
 				
-				nextLocation = connection.getHeaderField("Location");
+				String nextLocation = connection.getHeaderField("Location");
 				if (nextLocation != null) {
-					logger.trace("Discovered redirect to " + nextLocation);
-					aliases.add(lastLocation);
-					lastLocation = nextLocation;
+					if (nextLocation.equals(currentLocation) || aliases.contains(nextLocation)) {
+						logger.trace("Discovered loop redirect. Not following redirect to " + nextLocation);
+						_destinationUrl = currentLocation;
+						currentLocation = null;
+					} else {
+						logger.trace("Discovered redirect to " + nextLocation);
+						aliases.add(currentLocation);
+						lastLocation = currentLocation;
+						currentLocation = nextLocation;
+					}
 				} else {
 					logger.trace("URL resolved to its destination");
-					_destinationUrl = lastLocation;
+					_destinationUrl = currentLocation;
+					currentLocation = null;
 				}
 				connection.disconnect();
 			} catch (MalformedURLException ex) {
-				logger.error("Invalid URL [" + nextLocation + "]: " + ex);
+				logger.error("Invalid URL [" + currentLocation + "]: " + ex);
 				_parseError = ex.toString();
 				return false;
 			} catch (IOException ioe) {
-				logger.error("IO Exception [" + nextLocation + "]: " + ioe);
+				logger.error("IO Exception [" + currentLocation + "]: " + ioe);
 				_parseError = ioe.toString();
 				return false;
 			}
