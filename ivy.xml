@@ -12,6 +12,6 @@
     
     <dependencies>
 		<dependency org="log4j" name="log4j" rev="1.2.16" />
-		<dependency org="net.sourceforge.htmlcleaner" name="htmlcleaner" rev="2.2"/>
+		<dependency org="net.htmlparser.jericho" name="jericho-html" rev="3.2"/>
     </dependencies>
 </ivy-module>

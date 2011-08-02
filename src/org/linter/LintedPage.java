@@ -12,9 +12,12 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
+import net.htmlparser.jericho.CharacterReference;
+import net.htmlparser.jericho.Element;
+import net.htmlparser.jericho.HTMLElementName;
+import net.htmlparser.jericho.Source;
+
 import org.apache.log4j.Logger;
-import org.htmlcleaner.HtmlCleaner;
-import org.htmlcleaner.TagNode;
 
 public class LintedPage {
 	static private Logger logger = Logger.getLogger(LintedPage.class);
@@ -33,8 +36,6 @@ public class LintedPage {
 	private String _favIconUrl;
 	
 	private long _processingTime;
-	
-	private TagNode _node;
 	
 	/**
 	 * Create a blank linted page, expects you to call {@link process} at some point 
@@ -159,49 +160,40 @@ public class LintedPage {
 			return;
 		}
 		
+		// Jericho HTML Parser
 		
-		HtmlCleaner cleaner = new HtmlCleaner();
+		//source.setLogger(logger);
+		Source source = null;
 		try {
-			_node = cleaner.clean(inStr);
-		} catch (MalformedURLException mue) {
-			logger.error("Invalid URL [" + this.getDestinationUrl() + "]: " + mue.toString());
-			_parseError = mue.toString();
-			return;
+			 source = new Source(inStr);
 		} catch (Exception ex) {
-			logger.error("Unable to scrape and clean HTML: " + ex.toString());
+			logger.error("Unable to parse HTML: " + ex.toString());
 			_parseError = ex.toString();
 			return;
 		}
 
 		// Page title
-		try {
-			Object[] titleNodes = _node.evaluateXPath("//head/title");
-			if (titleNodes != null) {
-				_title = ((TagNode)titleNodes[0]).getText().toString().trim();
-			}
-		} catch (Exception e) {
+		Element titleElement = source.getFirstElement(HTMLElementName.TITLE);
+		if (titleElement != null)
+			_title = CharacterReference.decodeCollapseWhiteSpace(titleElement.getContent());
+		else
 			logger.trace("[" + this.getDestinationUrl() + "] Could not extract the page title");
-		}
-		
-		// Page description
-		try {
-			Object[] descNodes = _node.evaluateXPath("//head/meta[@name='description']");
-			if (descNodes != null) {
-				_description = ((TagNode)descNodes[0]).getAttributeByName("content").trim();
-			}
-		} catch (Exception e) {
+
+		// Description
+		// NOTE: we assume that the first element with attribute name="description" is the meta description tag; else this will fail
+		Element descElement = source.getFirstElement("name", "description", false);
+		if (descElement != null && descElement.getName().equalsIgnoreCase(HTMLElementName.META))
+			_description = CharacterReference.decodeCollapseWhiteSpace(descElement.getAttributeValue("content"));
+		else
 			logger.trace("[" + this.getDestinationUrl() + "] Could not extract the page description");
-		}
 		
-		// Fav icon
-		try {
-			Object[] favIconNodes = _node.evaluateXPath("//head/link[@rel='icon']");
-			if (favIconNodes != null) {
-				_favIconUrl = ((TagNode)favIconNodes[0]).getAttributeByName("href").trim();
-			}
-		} catch (Exception e) {
+		// Favicon
+		// NOTE: we assume that the first element with attribute rel="icon" is the link icon tag; else this will fail
+		Element faviconElement = source.getFirstElement("rel", "icon", false);
+		if (faviconElement != null  && faviconElement.getName().equalsIgnoreCase(HTMLElementName.LINK))
+			_favIconUrl = CharacterReference.decodeCollapseWhiteSpace(faviconElement.getAttributeValue("href"));
+		else
 			logger.trace("[" + this.getDestinationUrl() + "] Could not extract the fav icon URL");
-		}
 		
 		_parseOk = true;
 	}
