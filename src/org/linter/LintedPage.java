@@ -111,7 +111,7 @@ public class LintedPage {
 						currentLocation = nextLocation;
 					}
 				} else {
-					logger.trace("URL resolved to its destination: " + _destinationUrl);
+					logger.trace("URL resolved to its destination: " + currentLocation);
 					_destinationUrl = currentLocation;
 					currentLocation = null;
 				}
@@ -148,8 +148,13 @@ public class LintedPage {
 			connection.setRequestProperty("User-Agent", LintedPage.HTTP_USER_AGENT);
 			connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
 			
+			String contentType = connection.getContentType();
+			if (!contentType.toLowerCase().contains("text/html")) {
+				logger.warn(logPrefix + "Not downloading or scraping page because content-type was: " + contentType);
+				return;
+			}
+			
 			String encoding = connection.getContentEncoding();
-	
 			if (encoding != null && encoding.equalsIgnoreCase("gzip")) {
 			    inStr = new GZIPInputStream(connection.getInputStream());
 			} else if (encoding != null && encoding.equalsIgnoreCase("deflate")) {
