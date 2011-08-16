@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
@@ -183,35 +184,59 @@ public class LintedPage {
 
 		// Page title
 		logger.trace(logPrefix + "Scraping page title...");
-		Element titleElement = source.getFirstElement(HTMLElementName.TITLE);
-		if (titleElement != null) {
-			_title = CharacterReference.decodeCollapseWhiteSpace(titleElement.getContent());
-			logger.trace(logPrefix + "TITLE: " + _title);
+		try {
+			Element titleElement = source.getFirstElement(HTMLElementName.TITLE);
+			if (titleElement != null) {
+				_title = CharacterReference.decodeCollapseWhiteSpace(titleElement.getContent());
+				logger.trace(logPrefix + "TITLE: " + _title);
+			}
+			else {
+				logger.trace(logPrefix + "Could not extract the page title");
+			}
+		} catch (Exception ex) {
+			logger.error(logPrefix + "Error extracting page title: ", ex);
 		}
-		else {
-			logger.trace(logPrefix + "Could not extract the page title");
-		}
-
+		
 		// Description
 		// NOTE: we assume that the first element with attribute name="description" is the meta description tag; else this will fail
 		logger.trace(logPrefix + "Scraping description...");
-		Element descElement = source.getFirstElement("name", "description", false);
-		if (descElement != null && descElement.getName().equalsIgnoreCase(HTMLElementName.META)) {
-			_description = CharacterReference.decodeCollapseWhiteSpace(descElement.getAttributeValue("content"));
-			logger.trace(logPrefix + "DESCRIPTION: " + _description);
-		} else {
-			logger.trace(logPrefix + "Could not extract the page description");
+		try {
+			Element descElement = source.getFirstElement("name", "description", false);
+			if (descElement != null && descElement.getName().equalsIgnoreCase(HTMLElementName.META)) {
+				_description = CharacterReference.decodeCollapseWhiteSpace(descElement.getAttributeValue("content"));
+				logger.trace(logPrefix + "DESCRIPTION: " + _description);
+			} else {
+				logger.trace(logPrefix + "Could not extract the page description");
+			}
+		} catch (Exception ex) {
+			logger.error(logPrefix + "Error extracting page description: ", ex);
 		}
 		
 		// Favicon
 		// NOTE: we assume that the first element with attribute rel="icon" is the link icon tag; else this will fail
 		logger.trace(logPrefix + "Scraping favicon URL...");
-		Element faviconElement = source.getFirstElement("rel", "icon", false);
-		if (faviconElement != null  && faviconElement.getName().equalsIgnoreCase(HTMLElementName.LINK)) {
-			_favIconUrl = CharacterReference.decodeCollapseWhiteSpace(faviconElement.getAttributeValue("href"));
-			logger.trace(logPrefix + "FAVICON URL: " + _favIconUrl);
-		} else {
-			logger.trace("[" + this.getDestinationUrl() + "] Could not extract the fav icon URL");
+		try {
+			// Get a list of all 'icon' and 'shortcut icon' elements
+			List<Element> relIconElements = new ArrayList<Element>();
+			relIconElements.addAll(source.getAllElements("rel", "icon", false));
+			relIconElements.addAll(source.getAllElements("rel", "shortcut icon", false));
+			
+			for (Element element : relIconElements) {
+				if (element.getName().equalsIgnoreCase(HTMLElementName.LINK)) {
+					String hrefAttr = element.getAttributeValue("href");
+					if (hrefAttr != null) {
+						_favIconUrl = CharacterReference.decodeCollapseWhiteSpace(hrefAttr);
+						break;
+					}
+				}
+			}
+			
+			if (_favIconUrl != null)
+				logger.trace(logPrefix + "FAVICON URL: " + _favIconUrl);
+			else
+				logger.trace("[" + this.getDestinationUrl() + "] Could not extract the fav icon URL");
+		} catch (Exception ex) {
+			logger.error(logPrefix + "Error extracting fav icon URL: ", ex);
 		}
 		
 		logger.trace(logPrefix + "Scraping complete.");
