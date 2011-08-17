@@ -203,7 +203,12 @@ public class LintedPage {
 		try {
 			Element descElement = source.getFirstElement("name", "description", false);
 			if (descElement != null && descElement.getName().equalsIgnoreCase(HTMLElementName.META)) {
-				_description = CharacterReference.decodeCollapseWhiteSpace(descElement.getAttributeValue("content"));
+				String contentAttr = descElement.getAttributeValue("content");
+				if (contentAttr != null)
+					_description = CharacterReference.decodeCollapseWhiteSpace(contentAttr);
+			}
+			
+			if (_description != null) {
 				logger.trace(logPrefix + "DESCRIPTION: " + _description);
 			} else {
 				logger.trace(logPrefix + "Could not extract the page description");
@@ -213,7 +218,6 @@ public class LintedPage {
 		}
 		
 		// Favicon
-		// NOTE: we assume that the first element with attribute rel="icon" is the link icon tag; else this will fail
 		logger.trace(logPrefix + "Scraping favicon URL...");
 		try {
 			// Get a list of all 'icon' and 'shortcut icon' elements
