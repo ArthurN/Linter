@@ -25,6 +25,7 @@ public class LintedPage {
 	
 	public static final String HTTP_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:5.0.1) Gecko/20100101 Firefox/5.0.1"; // Firefox 5.0.1 on Snow Leopard
 	public static final int HTTP_CONNECT_TIMEOUT = 5000;	// 5 sec
+	public static final int HTTP_MAX_CONTENT_LENGTH = 1048576; 	// 1 MB in bytes 
 	
 	private boolean _parseOk = false;
 	private String _parseError;
@@ -152,6 +153,12 @@ public class LintedPage {
 			String contentType = connection.getContentType();
 			if (!contentType.toLowerCase().contains("text/html")) {
 				logger.warn(logPrefix + "Not downloading or scraping page because content-type was: " + contentType);
+				return;
+			}
+			
+			int contentLength = connection.getContentLength();
+			if (contentLength > LintedPage.HTTP_MAX_CONTENT_LENGTH) {
+				logger.warn(logPrefix + "Not downloading or scraping page because content-length was too large: " + Integer.toString(contentLength) + " (max: " + Integer.toString(LintedPage.HTTP_MAX_CONTENT_LENGTH) + ")");
 				return;
 			}
 			
