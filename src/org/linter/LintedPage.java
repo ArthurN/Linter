@@ -24,7 +24,7 @@ public class LintedPage {
 	static private Logger logger = Logger.getLogger(LintedPage.class);
 	
 	public static final String HTTP_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:5.0.1) Gecko/20100101 Firefox/5.0.1"; // Firefox 5.0.1 on Snow Leopard
-	public static final int HTTP_CONNECT_TIMEOUT = 5000;	// 5 sec
+	public static final int HTTP_CONNECT_TIMEOUT = 10000;	// 10 sec
 	public static final int HTTP_MAX_CONTENT_LENGTH = 1048576; 	// 1 MB in bytes 
 	
 	private boolean _parseOk = false;
