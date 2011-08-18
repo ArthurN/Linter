@@ -23,7 +23,7 @@ import org.apache.log4j.Logger;
 public class LintedPage {
 	static private Logger logger = Logger.getLogger(LintedPage.class);
 	
-	public static final String HTTP_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:5.0.1) Gecko/20100101 Firefox/5.0.1"; // Firefox 5.0.1 on Snow Leopard
+	public static final String HTTP_USER_AGENT = "Mozilla/5.0 (compatible; Linter/1.0)"; // our own custom user agent based on Googlebot
 	public static final int HTTP_CONNECT_TIMEOUT = 10000;	// 10 sec
 	public static final int HTTP_MAX_CONTENT_LENGTH = 1048576; 	// 1 MB in bytes 
 	
@@ -99,6 +99,12 @@ public class LintedPage {
 				if (lastLocation != null)
 					connection.setRequestProperty("Referer", lastLocation);
 				connection.connect();
+				
+				/*
+				Map<String, List<String>> headers = connection.getHeaderFields();
+				for (String key : headers.keySet())
+					System.out.println("HEAD " + key + "=" + headers.get(key));
+				*/
 				
 				String nextLocation = connection.getHeaderField("Location");
 				if (nextLocation != null) {
