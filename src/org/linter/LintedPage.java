@@ -9,6 +9,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
@@ -23,6 +25,7 @@ import org.apache.log4j.Logger;
 public class LintedPage {
 	static private Logger logger = Logger.getLogger(LintedPage.class);
 	
+	private static final String URL_PATTERN = "^((\\w+)://)?((\\w+):?(\\w+)?@)?([^/\\?:]+):?(\\d+)?(/?[^\\?#]+)?\\??([^#]+)?#?(\\w*)";
 	public static final String HTTP_USER_AGENT = "Mozilla/5.0 (compatible; Linter/1.0)"; // our own custom user agent based on Googlebot
 	public static final int HTTP_CONNECT_TIMEOUT = 10000;	// 10 sec
 	public static final int HTTP_MAX_CONTENT_LENGTH = 1048576; 	// 1 MB in bytes 
@@ -36,6 +39,8 @@ public class LintedPage {
 	private String _title;
 	private String _description;
 	private String _favIconUrl;
+	private String _providerName;
+	private String _providerUrl;
 	
 	private long _processingTime;
 	
@@ -114,6 +119,7 @@ public class LintedPage {
 						currentLocation = null;
 					} else {
 						logger.trace("Discovered redirect to " + nextLocation);
+						
 						aliases.add(currentLocation);
 						lastLocation = currentLocation;
 						currentLocation = nextLocation;
@@ -369,7 +375,45 @@ public class LintedPage {
 		sb.append("\tPAGE TITLE:\t\t"); sb.append(this.getTitle()); sb.append('\n');
 		sb.append("\tDESCRIPTION:\t\t"); sb.append(this.getDescription()); sb.append('\n');
 		sb.append("\tFAV ICON:\t\t"); sb.append(this.getFavIconUrl()); sb.append('\n');
+		sb.append("\tPROVIDER NAME:\t\t"); sb.append(this.getProviderName()); sb.append('\n');
+		sb.append("\tPROVIDER URL:\t\t"); sb.append(this.getProviderUrl()); sb.append('\n');
 		sb.append("} in "); sb.append(this.getProcessingTimeForHumans()); sb.append(" s\n");
 		return sb.toString();
+	}
+	
+	public String getProviderUrl() {
+		if (_providerUrl == null) {
+			parseProviderNameAndUrl(_destinationUrl);
+		}
+		
+		return _providerUrl;
+	}
+	
+	public String getProviderName() {
+		if (_providerName == null) {
+			// Force the parsing via getProviderUrl
+			getProviderUrl();
+		}
+		
+		return _providerName;
+	}
+	
+	/**
+	 * Returns the provider URL 
+	 * From: http://www.webtalkforums.com/showthread.php/37600-Simple-JavaScript-RegEx-to-Parse-Domain-Name
+	 * @param url
+	 * @return
+	 */
+	private void parseProviderNameAndUrl(String url) {
+		Pattern pattern = Pattern.compile(LintedPage.URL_PATTERN);
+		Matcher m = pattern.matcher(url);
+		if (m.matches()) {
+			_providerUrl = m.group(1) + m.group(6);
+			_providerName = m.group(6).replace("www.", "");
+		} else {
+			// graceful degradation (more or less)
+			_providerUrl = url;
+			_providerName = _providerUrl.replace("http://", "").replace("https://", "").replace("www.", "");
+		}
 	}
 }
