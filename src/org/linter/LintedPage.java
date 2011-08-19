@@ -25,7 +25,17 @@ import org.apache.log4j.Logger;
 public class LintedPage {
 	static private Logger logger = Logger.getLogger(LintedPage.class);
 	
-	private static final String URL_PATTERN = "^((\\w+)://)?((\\w+):?(\\w+)?@)?([^/\\?:]+):?(\\d+)?(/?[^\\?#]+)?\\??([^#]+)?#?(\\w*)";
+	private static final Pattern URL_PATTERN = Pattern.compile(
+			"^((\\w+)://)?" +
+			"((\\w+):?(\\w+)?@)?" + 
+			"([^/\\?:]+)" +
+			":?" +
+			"(\\d+)?" +
+			"(/?[^\\?]+)?" +
+			"\\??" +
+			"([^#]+)?" +
+			"#?(\\w*)");
+	private static final String RELATIVE_URL_TEST = "://";
 	public static final String HTTP_USER_AGENT = "Mozilla/5.0 (compatible; Linter/1.0)"; // our own custom user agent based on Googlebot
 	public static final int HTTP_CONNECT_TIMEOUT = 10000;	// 10 sec
 	public static final int HTTP_MAX_CONTENT_LENGTH = 1048576; 	// 1 MB in bytes 
@@ -118,6 +128,23 @@ public class LintedPage {
 						_destinationUrl = currentLocation;
 						currentLocation = null;
 					} else {
+						// Did we get a relative redirect?
+						if (!nextLocation.contains(LintedPage.RELATIVE_URL_TEST)) {
+							String prefix;
+							
+							Matcher m = getUrlMatcher(currentLocation);
+							if (m.matches()) {
+								prefix = m.group(1) + m.group(6);
+							} else {
+								// graceful degradation (not that great but it should work) -- find everything to the left of the 1st '/' after ://
+								int endIndex = currentLocation.indexOf('/', currentLocation.indexOf(LintedPage.RELATIVE_URL_TEST) + LintedPage.RELATIVE_URL_TEST.length());
+								prefix = currentLocation.substring(0, endIndex);
+							}
+							
+							logger.trace("Relative URL redirect. Appending prefix: " + prefix);
+							nextLocation = prefix + nextLocation;
+						}
+						
 						logger.trace("Discovered redirect to " + nextLocation);
 						
 						aliases.add(currentLocation);
@@ -137,6 +164,10 @@ public class LintedPage {
 			} catch (IOException ioe) {
 				logger.error("IO Exception [" + currentLocation + "]: " + ioe);
 				_parseError = ioe.toString();
+				return false;
+			} catch (Exception ex) {
+				logger.error("Exception [" + currentLocation + "]: " + ex);
+				_parseError = ex.toString();
 				return false;
 			}
 		}
@@ -405,15 +436,20 @@ public class LintedPage {
 	 * @return
 	 */
 	private void parseProviderNameAndUrl(String url) {
-		Pattern pattern = Pattern.compile(LintedPage.URL_PATTERN);
-		Matcher m = pattern.matcher(url);
+		Matcher m = getUrlMatcher(url);
 		if (m.matches()) {
 			_providerUrl = m.group(1) + m.group(6);
 			_providerName = m.group(6).replace("www.", "");
 		} else {
-			// graceful degradation (more or less)
-			_providerUrl = url;
+			// graceful degradation (not that great but it should work) -- find everything to the left of the 1st '/' after ://
+			logger.trace("Graceful degradation on parsing provider name/url");
+			int endIndex = url.indexOf('/', url.indexOf(LintedPage.RELATIVE_URL_TEST) + LintedPage.RELATIVE_URL_TEST.length());
+			_providerUrl = url.substring(0, endIndex);
 			_providerName = _providerUrl.replace("http://", "").replace("https://", "").replace("www.", "");
 		}
+	}
+	
+	private Matcher getUrlMatcher(String url) {
+		return LintedPage.URL_PATTERN.matcher(url);
 	}
 }
