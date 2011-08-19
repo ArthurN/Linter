@@ -285,10 +285,16 @@ public class LintedPage {
 				}
 			}
 			
-			if (_favIconUrl != null)
+			if (_favIconUrl != null) {
+				if (!_favIconUrl.contains(LintedPage.RELATIVE_URL_TEST)) {
+					logger.trace("Relative URL for favicon. Prefixing provider URL: " + getProviderUrl());
+					_favIconUrl = getProviderUrl() + _favIconUrl;
+				}
+				
 				logger.trace(logPrefix + "FAVICON URL: " + _favIconUrl);
-			else
+			} else {
 				logger.trace("[" + this.getDestinationUrl() + "] Could not extract the fav icon URL");
+			}
 		} catch (Exception ex) {
 			logger.error(logPrefix + "Error extracting fav icon URL: ", ex);
 		}
