@@ -123,30 +123,29 @@ public class LintedPage {
 				
 				String nextLocation = connection.getHeaderField("Location");
 				if (nextLocation != null) {
+					// Did we get a relative redirect?
+					if (!nextLocation.contains(LintedPage.RELATIVE_URL_TEST)) {
+						String prefix;
+						
+						Matcher m = getUrlMatcher(currentLocation);
+						if (m.matches()) {
+							prefix = m.group(1) + m.group(6);
+						} else {
+							// graceful degradation (not that great but it should work) -- find everything to the left of the 1st '/' after ://
+							int endIndex = currentLocation.indexOf('/', currentLocation.indexOf(LintedPage.RELATIVE_URL_TEST) + LintedPage.RELATIVE_URL_TEST.length());
+							prefix = currentLocation.substring(0, endIndex);
+						}
+						
+						logger.trace("Relative URL redirect. Appending prefix: " + prefix);
+						nextLocation = prefix + nextLocation;
+					}
+					
 					if (nextLocation.equals(currentLocation) || aliases.contains(nextLocation)) {
 						logger.trace("Discovered loop redirect. Not following redirect to " + nextLocation);
 						_destinationUrl = currentLocation;
 						currentLocation = null;
 					} else {
-						// Did we get a relative redirect?
-						if (!nextLocation.contains(LintedPage.RELATIVE_URL_TEST)) {
-							String prefix;
-							
-							Matcher m = getUrlMatcher(currentLocation);
-							if (m.matches()) {
-								prefix = m.group(1) + m.group(6);
-							} else {
-								// graceful degradation (not that great but it should work) -- find everything to the left of the 1st '/' after ://
-								int endIndex = currentLocation.indexOf('/', currentLocation.indexOf(LintedPage.RELATIVE_URL_TEST) + LintedPage.RELATIVE_URL_TEST.length());
-								prefix = currentLocation.substring(0, endIndex);
-							}
-							
-							logger.trace("Relative URL redirect. Appending prefix: " + prefix);
-							nextLocation = prefix + nextLocation;
-						}
-						
 						logger.trace("Discovered redirect to " + nextLocation);
-						
 						aliases.add(currentLocation);
 						lastLocation = currentLocation;
 						currentLocation = nextLocation;
