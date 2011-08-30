@@ -38,6 +38,7 @@ public class LintedPage {
 	private static final String RELATIVE_URL_TEST = "://";
 	public static final String HTTP_USER_AGENT = "Mozilla/5.0 (compatible; Linter/1.0)"; // our own custom user agent based on Googlebot
 	public static final int HTTP_CONNECT_TIMEOUT = 10000;	// 10 sec
+	public static final int HTTP_READ_TIMEOUT = 5000;	// 5 sec
 	public static final int HTTP_MAX_CONTENT_LENGTH = 1048576; 	// 1 MB in bytes 
 	
 	private boolean _parseOk = false;
@@ -110,6 +111,7 @@ public class LintedPage {
 				connection.setInstanceFollowRedirects(false);
 				connection.setRequestMethod("HEAD"); // only want the headers
 				connection.setConnectTimeout(LintedPage.HTTP_CONNECT_TIMEOUT);
+				connection.setReadTimeout(LintedPage.HTTP_READ_TIMEOUT);
 				connection.setRequestProperty("User-Agent", LintedPage.HTTP_USER_AGENT);
 				if (lastLocation != null)
 					connection.setRequestProperty("Referer", lastLocation);
