@@ -193,8 +193,11 @@ public class LintedPage {
 			connection.setConnectTimeout(LintedPage.HTTP_CONNECT_TIMEOUT);
 			connection.setRequestProperty("User-Agent", LintedPage.HTTP_USER_AGENT);
 			connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
+			connection.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
 			
 			String contentType = connection.getContentType();
+			if (contentType == null)
+				contentType = "unknown";
 			if (!contentType.toLowerCase().contains("text/html")) {
 				logger.warn(logPrefix + "Not downloading or scraping page because content-type was: " + contentType);
 				return;
@@ -216,6 +219,7 @@ public class LintedPage {
 			    inStr = connection.getInputStream();
 			}
 		} catch (Exception ex) {
+			ex.printStackTrace();
 			logger.error(logPrefix + "Unable to download page: " + ex);
 			_parseError = ex.toString();
 			return;
