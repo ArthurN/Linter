@@ -1,5 +1,6 @@
 package org.linter;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -187,9 +188,10 @@ public class LintedPage {
 		logger.trace(logPrefix + "Downloading and scraping page contents...");
 		
 		InputStream inStr = null;
+		HttpURLConnection connection = null;
 		try {
 			URL url = new URL(this.getDestinationUrl());
-			HttpURLConnection connection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
+			connection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
 			connection.setConnectTimeout(LintedPage.HTTP_CONNECT_TIMEOUT);
 			connection.setRequestProperty("User-Agent", LintedPage.HTTP_USER_AGENT);
 			connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
@@ -218,6 +220,18 @@ public class LintedPage {
 			} else {
 			    inStr = connection.getInputStream();
 			}
+		} catch (FileNotFoundException fnf) {
+			_parseError = "HTTP ERROR 404";
+			logger.error(logPrefix + " " + _parseError);
+			return;
+		} catch (IOException ioe) {
+			try {
+				_parseError = "HTTP ERROR " + Integer.toString(connection.getResponseCode());
+			} catch (IOException e) {
+				_parseError = " Unable to download page: " + e;
+			}
+			logger.error(logPrefix + " " + _parseError);
+			return;
 		} catch (Exception ex) {
 			logger.error(logPrefix + "Unable to download page: " + ex);
 			_parseError = ex.toString();
@@ -403,6 +417,9 @@ public class LintedPage {
 		StringBuilder sb = new StringBuilder(_originalUrl);
 		sb.append(" {\n");
 		sb.append("\tPARSE OK:\t\t"); sb.append(this.getParseOk()); sb.append('\n');
+		if (!this.getParseOk()) {
+			sb.append("\tPARSE ERROR:\t\t"); sb.append(this.getParseError()); sb.append('\n');
+		}
 		sb.append("\tALIASES:");
 			if (_aliases == null || _aliases.length == 0)
 				sb.append("\t\tNONE\n");
