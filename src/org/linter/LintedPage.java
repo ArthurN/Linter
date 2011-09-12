@@ -219,7 +219,6 @@ public class LintedPage {
 			    inStr = connection.getInputStream();
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
 			logger.error(logPrefix + "Unable to download page: " + ex);
 			_parseError = ex.toString();
 			return;
