@@ -198,7 +198,7 @@ public class LintedPage {
 			String contentType = connection.getContentType();
 			if (contentType == null)
 				contentType = "unknown";
-			if (!contentType.toLowerCase().contains("text/html")) {
+			if (!contentType.toLowerCase().contains("text/html") && !contentType.toLowerCase().contains("text/plain")) {
 				logger.warn(logPrefix + "Not downloading or scraping page because content-type was: " + contentType);
 				return;
 			}
