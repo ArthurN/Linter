@@ -193,6 +193,7 @@ public class LintedPage {
 			URL url = new URL(this.getDestinationUrl());
 			connection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
 			connection.setConnectTimeout(LintedPage.HTTP_CONNECT_TIMEOUT);
+			connection.setReadTimeout(LintedPage.HTTP_READ_TIMEOUT);
 			connection.setRequestProperty("User-Agent", LintedPage.HTTP_USER_AGENT);
 			connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
 			connection.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
