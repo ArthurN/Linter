@@ -227,9 +227,10 @@ public class LintedPage {
 			return;
 		} catch (IOException ioe) {
 			try {
-				_parseError = "HTTP ERROR " + Integer.toString(connection.getResponseCode());
+				_parseError = "Unable to download page [HTTP ERROR " + Integer.toString(connection.getResponseCode()) + "]: " + ioe;
 			} catch (IOException e) {
-				_parseError = " Unable to download page: " + e;
+				// We'd get an ioexception on the above try{} clause if don't have a response code
+				_parseError = " Unable to download page: " + ioe;
 			}
 			logger.error(logPrefix + " " + _parseError);
 			return;
