@@ -7,6 +7,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -15,6 +17,11 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import net.htmlparser.jericho.CharacterReference;
 import net.htmlparser.jericho.Element;
@@ -55,6 +62,7 @@ public class LintedPage {
 	private String _providerUrl;
 	
 	private long _processingTime;
+	private static TrustManager[] TRUST_MANAGER = null;
 	
 	/**
 	 * Create a blank linted page, expects you to call {@link process} at some point 
@@ -106,9 +114,15 @@ public class LintedPage {
 			try {
 				URL url = new URL(currentLocation);
 				
-				logger.trace("Following " + currentLocation + "...");
+				logger.trace("Following " + currentLocation + "...");										
+			    
+				// Lazy initialize the trust manager
+				if( TRUST_MANAGER == null ) {
+					initTrustManager();
+				}
 				
 				HttpURLConnection connection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
+
 				connection.setInstanceFollowRedirects(false);
 				connection.setRequestMethod("HEAD"); // only want the headers
 				connection.setConnectTimeout(LintedPage.HTTP_CONNECT_TIMEOUT);
@@ -480,5 +494,36 @@ public class LintedPage {
 	
 	private Matcher getUrlMatcher(String url) {
 		return LintedPage.URL_PATTERN.matcher(url);
+	}
+
+	/*
+	 * Initialize Trust Manager
+	 * Does not checking, accepts all certificates
+	 */
+	private void initTrustManager() throws KeyManagementException {
+
+		// Create a new TrustManager that accepts all certificates
+		TRUST_MANAGER = new TrustManager[]{
+				new X509TrustManager() {
+					public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+						return null;
+					}
+					public void checkClientTrusted(
+							java.security.cert.X509Certificate[] certs, String authType) {
+					}
+					public void checkServerTrusted(
+							java.security.cert.X509Certificate[] certs, String authType) {
+					}
+				}
+		};
+
+		SSLContext sc;
+		try {
+			sc = SSLContext.getInstance("SSL");
+			sc.init(null, TRUST_MANAGER, new java.security.SecureRandom());
+			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+		} catch (NoSuchAlgorithmException e) {
+			logger.error( "Error configuring SSL", e);
+		}			    	    
 	}
 }
