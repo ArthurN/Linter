@@ -10,7 +10,6 @@ import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,11 +21,6 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-
-import net.htmlparser.jericho.CharacterReference;
-import net.htmlparser.jericho.Element;
-import net.htmlparser.jericho.HTMLElementName;
-import net.htmlparser.jericho.Source;
 
 import org.apache.log4j.Logger;
 
@@ -52,24 +46,22 @@ public class LintedPage {
 	private boolean _parseOk = false;
 	private String _parseError;
 	
+	private LintedData _metaData;
 	private String _originalUrl;
 	private String[] _aliases = {};
 	private String _destinationUrl;
-	private String _title;
-	private String _description;
-	private String _favIconUrl;
-	private String _providerName;
-	private String _providerUrl;
 	
 	private long _processingTime;
 	private static TrustManager[] TRUST_MANAGER = null;
-	
+	 
+		
 	/**
 	 * Create a blank linted page, expects you to call {@link process} at some point 
 	 * @param originalUrl - the URL to be processed
 	 */
 	public LintedPage(String originalUrl) {
 		_originalUrl = originalUrl;
+		_metaData = null;
 	}
 	
 	/***
@@ -132,11 +124,6 @@ public class LintedPage {
 					connection.setRequestProperty("Referer", lastLocation);
 				connection.connect();
 				
-				/*
-				Map<String, List<String>> headers = connection.getHeaderFields();
-				for (String key : headers.keySet())
-					System.out.println("HEAD " + key + "=" + headers.get(key));
-				*/
 				
 				String nextLocation = connection.getHeaderField("Location");
 				if (nextLocation != null) {
@@ -254,88 +241,10 @@ public class LintedPage {
 			return;
 		}
 		
-		// Jericho HTML Parser
-		
-		//source.setLogger(logger);
-		Source source = null;
-		try {
-			 source = new Source(inStr);
-		} catch (Exception ex) {
-			logger.error(logPrefix + "Unable to parse HTML: " + ex.toString());
-			_parseError = ex.toString();
-			return;
-		}
-
-		// Page title
-		logger.trace(logPrefix + "Scraping page title...");
-		try {
-			Element titleElement = source.getFirstElement(HTMLElementName.TITLE);
-			if (titleElement != null) {
-				_title = CharacterReference.decodeCollapseWhiteSpace(titleElement.getContent());
-				logger.trace(logPrefix + "TITLE: " + _title);
-			}
-			else {
-				logger.trace(logPrefix + "Could not extract the page title");
-			}
-		} catch (Exception ex) {
-			logger.error(logPrefix + "Error extracting page title: ", ex);
-		}
-		
-		// Description
-		// NOTE: we assume that the first element with attribute name="description" is the meta description tag; else this will fail
-		logger.trace(logPrefix + "Scraping description...");
-		try {
-			Element descElement = source.getFirstElement("name", "description", false);
-			if (descElement != null && descElement.getName().equalsIgnoreCase(HTMLElementName.META)) {
-				String contentAttr = descElement.getAttributeValue("content");
-				if (contentAttr != null)
-					_description = CharacterReference.decodeCollapseWhiteSpace(contentAttr);
-			}
-			
-			if (_description != null) {
-				logger.trace(logPrefix + "DESCRIPTION: " + _description);
-			} else {
-				logger.trace(logPrefix + "Could not extract the page description");
-			}
-		} catch (Exception ex) {
-			logger.error(logPrefix + "Error extracting page description: ", ex);
-		}
-		
-		// Favicon
-		logger.trace(logPrefix + "Scraping favicon URL...");
-		try {
-			// Get a list of all 'icon' and 'shortcut icon' elements
-			List<Element> relIconElements = new ArrayList<Element>();
-			relIconElements.addAll(source.getAllElements("rel", "icon", false));
-			relIconElements.addAll(source.getAllElements("rel", "shortcut icon", false));
-			
-			for (Element element : relIconElements) {
-				if (element.getName().equalsIgnoreCase(HTMLElementName.LINK)) {
-					String hrefAttr = element.getAttributeValue("href");
-					if (hrefAttr != null) {
-						_favIconUrl = CharacterReference.decodeCollapseWhiteSpace(hrefAttr);
-						break;
-					}
-				}
-			}
-			
-			if (_favIconUrl != null) {
-				if (!_favIconUrl.contains(LintedPage.RELATIVE_URL_TEST)) {
-					logger.trace("Relative URL for favicon. Prefixing provider URL: " + getProviderUrl());
-					_favIconUrl = getProviderUrl() + _favIconUrl;
-				}
-				
-				logger.trace(logPrefix + "FAVICON URL: " + _favIconUrl);
-			} else {
-				logger.trace("[" + this.getDestinationUrl() + "] Could not extract the fav icon URL");
-			}
-		} catch (Exception ex) {
-			logger.error(logPrefix + "Error extracting fav icon URL: ", ex);
-		}
-		
-		logger.trace(logPrefix + "Scraping complete.");
-		
-		_parseOk = true;
+		ServiceParser parser = ServiceParserChainManager.getInstance().getServiceParser( this.getDestinationUrl() );
+		parser.setRawContent( inStr );
+		_parseOk = parser.parse();
+		_metaData = parser.getMetaData();
 	}
 	
 	/***
@@ -371,14 +280,6 @@ public class LintedPage {
 	}
 	
 	/***
-	 * Gets the page title
-	 * @return
-	 */
-	public String getTitle() {
-		return _title;
-	}
-	
-	/***
 	 * Gets the final destination, after expanding any shortened URLs starting from the original URL
 	 * @return
 	 */
@@ -389,23 +290,7 @@ public class LintedPage {
 			_destinationUrl = _originalUrl;
 		return _destinationUrl;
 	}
-	
-	/***
-	 * Gets the page descripton (from <meta name='description'>)
-	 * @return
-	 */
-	public String getDescription() {
-		return _description;
-	}
-	
-	/***
-	 * Gets the page's favicon (from <link rel='icon'>)
-	 * @return
-	 */
-	public String getFavIconUrl() {
-		return _favIconUrl;
-	}
-	
+		
 	/***
 	 * Gets the processing time in milliseconds
 	 * @return
@@ -444,53 +329,21 @@ public class LintedPage {
 				for (String alias : _aliases) {
 					sb.append("\t\t"); sb.append(alias); sb.append('\n');
 				}
-			}
+			}		
+		
 		sb.append("\tDEST URL:\t\t"); sb.append(this.getDestinationUrl()); sb.append('\n');
-		sb.append("\tPAGE TITLE:\t\t"); sb.append(this.getTitle()); sb.append('\n');
-		sb.append("\tDESCRIPTION:\t\t"); sb.append(this.getDescription()); sb.append('\n');
-		sb.append("\tFAV ICON:\t\t"); sb.append(this.getFavIconUrl()); sb.append('\n');
-		sb.append("\tPROVIDER NAME:\t\t"); sb.append(this.getProviderName()); sb.append('\n');
-		sb.append("\tPROVIDER URL:\t\t"); sb.append(this.getProviderUrl()); sb.append('\n');
-		sb.append("} in "); sb.append(this.getProcessingTimeForHumans()); sb.append(" s\n");
-		return sb.toString();
-	}
-	
-	public String getProviderUrl() {
-		if (_providerUrl == null) {
-			parseProviderNameAndUrl(_destinationUrl);
-		}
-		
-		return _providerUrl;
-	}
-	
-	public String getProviderName() {
-		if (_providerName == null) {
-			// Force the parsing via getProviderUrl
-			getProviderUrl();
-		}
-		
-		return _providerName;
-	}
-	
-	/**
-	 * Returns the provider URL 
-	 * From: http://www.webtalkforums.com/showthread.php/37600-Simple-JavaScript-RegEx-to-Parse-Domain-Name
-	 * @param url
-	 * @return
-	 */
-	private void parseProviderNameAndUrl(String url) {
-		Matcher m = getUrlMatcher(url);
-		if (m.matches()) {
-			_providerUrl = m.group(1) + m.group(6);
-			_providerName = m.group(6).replace("www.", "");
+
+		if( _metaData != null ) {
+			sb.append( _metaData.getPrettyDebugString() );
 		} else {
-			// graceful degradation (not that great but it should work) -- find everything to the left of the 1st '/' after ://
-			logger.trace("Graceful degradation on parsing provider name/url");
-			int endIndex = url.indexOf('/', url.indexOf(LintedPage.RELATIVE_URL_TEST) + LintedPage.RELATIVE_URL_TEST.length());
-			_providerUrl = url.substring(0, endIndex);
-			_providerName = _providerUrl.replace("http://", "").replace("https://", "").replace("www.", "");
+			sb.append( "\tNo meta data parsed.\n" );
 		}
-	}
+		
+		sb.append("} in "); sb.append(this.getProcessingTimeForHumans()); sb.append(" s\n");
+		
+		return sb.toString();
+	}	
+	
 	
 	private Matcher getUrlMatcher(String url) {
 		return LintedPage.URL_PATTERN.matcher(url);
@@ -525,5 +378,13 @@ public class LintedPage {
 		} catch (NoSuchAlgorithmException e) {
 			logger.error( "Error configuring SSL", e);
 		}			    	    
+	}
+	
+	/*
+	 * Get Meta Data
+	 * @return LintedData
+	 */
+	public LintedData getMetaData() {
+		return _metaData;
 	}
 }
