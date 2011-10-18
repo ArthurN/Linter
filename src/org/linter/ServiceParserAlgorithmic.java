@@ -9,6 +9,7 @@ import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.Source;
 
+
 /*
  * Basic Service Parser
  * Pulls basic meta data from all providers
@@ -47,6 +48,7 @@ public class ServiceParserAlgorithmic extends ServiceParser {
 		parseTitle( source );
 		parseDescription( source );
 		parseFavIconUrl( source );	
+		parsePreviewImage( source );
 		
 		return true;
 	}
@@ -131,7 +133,7 @@ public class ServiceParserAlgorithmic extends ServiceParser {
 				}
 			}
 			
-			if (favIconUrl != null) {
+			if (favIconUrl != null && !favIconUrl.isEmpty() ) {
 				if (!favIconUrl.contains(RELATIVE_URL_TEST)) {
 					logger.trace("Relative URL for favicon. Prefixing provider URL: " + getProviderUrl());
 					favIconUrl = getProviderUrl() + favIconUrl;
@@ -149,5 +151,44 @@ public class ServiceParserAlgorithmic extends ServiceParser {
 		
 		return success;
 	}
+
 	
+	protected boolean parsePreviewImage( Source source ) {
+		logger.trace( _logPrefix + "Seleceting preview image" );
+		
+		String imagePreviewUrl = null;
+		
+		// Check if an image preview is provided in known meta tags
+		// <meta property="og:image" content="http://www.provider.com/image.jpg" />
+		// <link rel="image_src" href="http://www.provider.com/image.jpg" />
+		Element imagePreviewOG = source.getFirstElement( "property", "og:image", false );
+		if( imagePreviewOG != null ) {			
+			imagePreviewUrl = imagePreviewOG.getAttributeValue( "content" );
+			logger.trace( _logPrefix + "Preview image found in og:image" );
+		}
+		
+		if( imagePreviewUrl == null ) {
+			Element imagePreviewRel = source.getFirstElement( "rel", "image_src", false );
+			if( imagePreviewRel != null ) {
+				imagePreviewUrl = imagePreviewRel.getAttributeValue( "href" );
+				logger.trace( _logPrefix + "Preview image found in link rel=image_src" );
+			}
+		}
+		
+		// If the preview image is not specified, determine it algorithmically
+		if( imagePreviewUrl == null ) {
+			AlgorithmicImageSelector selector = new AlgorithmicImageSelector( source, getProviderUrl(), _logPrefix );
+			imagePreviewUrl = selector.getPreviewUrl();
+			logger.trace( _logPrefix + "Preview image found algorithmically" );
+		}
+		
+		// Store meta data
+		if( imagePreviewUrl != null && imagePreviewUrl.length() > 0 ) {
+			getMetaData().put( "preview-image-url", imagePreviewUrl );
+			logger.trace( _logPrefix + "Preview image url: " + imagePreviewUrl );
+		}
+		
+		return true;
+	}
+
 }

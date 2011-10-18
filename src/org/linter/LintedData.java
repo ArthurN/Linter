@@ -6,7 +6,7 @@ import java.util.Iterator;
 import org.apache.log4j.Logger;
 
 /*
- * Wrapper for JSONObject to allow easy writing and merging
+ * Wrapper for Hash to allow easy writing and merging
  */
 public class LintedData {
 	static protected Logger logger = Logger.getLogger( LintedData.class );

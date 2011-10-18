@@ -9,11 +9,7 @@ public class Linter {
 	 * Run Linter as a command-line to optionally test URLs via CLI
 	 * @param args The URLs to resolve
 	 */
-	public static void main(String[] args) {
-		
-		ServiceParserChainManager chainManager = ServiceParserChainManager.getInstance();
-		chainManager.registerServiceParser( ServiceParserFlickr.class );
-		
+	public static void main(String[] args) {				
 		if (args.length == 0) {
 			System.out.println("Invalid number of arguments. You must include at least one URL to process.");
 			System.exit(1);
