@@ -88,17 +88,15 @@ public class AlgorithmicImageSelector {
 		// Increase score for image with the largest image dimensions
 		increaseLargestImageScore();
 		
-		logger.trace( _logPrefix + "Filtered potential set length: " + _potentialSet.size() );
-		
-		// Pick image with the highest score
-		// If the first image fails to download or is an inappropriate size, attempt with
-		// the second highest score
+		logger.trace( _logPrefix + "Filtered potential set length: " + _potentialSet.size() );		
+	
+		// Verify the highest scoring image exists and is larger than the minimum preview dimensions
 		String imageUrl = "";
 		for( int i = 0; i < 2; i++ ) {
-		
+			
+			// Pick image with the highest score		
 			AlgorithmicImageItem highestScoredImage = getHighestScoredImage();
-		
-			// Verify the highest scoring image exists and is larger than the minimum preview dimensions			
+			
 			if( highestScoredImage != null ) {
 				
 				// Download the image if we do not have any width information
@@ -116,19 +114,19 @@ public class AlgorithmicImageSelector {
 					
 					// Image is good!
 					imageUrl = highestScoredImage.getUrl();
-					logger.trace( _logPrefix + "Selected image with url: " + imageUrl );
+					logger.trace( _logPrefix + "AlgorithmicimageSelector: Selected image with url: " + imageUrl );
 					break;
-					
 				} else {
 					// Image is not good. Retry
+					logger.trace( _logPrefix + "AlgorithmicimageSelector: Image has invalid characteristics. Width: " + highestScoredImage.getWidth() + " Height: " + highestScoredImage.getHeight() + " Size: " + highestScoredImage.getFileSize() + " Url: " + highestScoredImage.getUrl() );
 					_potentialSet.remove( highestScoredImage );
-					logger.trace( _logPrefix + "First pick has invalid characteristics. Trying again." );
+					
 				}
 			}
 		}
 		
 		long timeDelta = System.currentTimeMillis() - timeStart;
-		logger.trace( _logPrefix + "Preview image select time: " + timeDelta + "ms" );
+		logger.trace( _logPrefix + "AlgorithmicimageSelector: Preview image select time: " + timeDelta + "ms" );
 		
 		return imageUrl;
 	}

@@ -61,7 +61,7 @@ public class LintedPage {
 	 */
 	public LintedPage(String originalUrl) {
 		_originalUrl = originalUrl;
-		_metaData = null;
+		_metaData = new LintedData();
 	}
 	
 	/***

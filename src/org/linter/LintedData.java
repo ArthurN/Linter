@@ -57,7 +57,11 @@ public class LintedData {
 	 * @return String
 	 */
 	public String getString( String key ) {
-		return _data.get( key ).toString();
+		String ret = null;
+		if( _data.containsKey( key ) ) {
+			ret = _data.get( key ).toString(); 
+		}
+		return ret;
 	}
 	
 	/*
