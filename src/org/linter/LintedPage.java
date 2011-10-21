@@ -183,7 +183,7 @@ public class LintedPage {
 	/**
 	 * Scrapes the metadata on this page (can be called separately from {@link process}
 	 */
-	public void scrapeMetadata() {
+	public void scrapeMetadata() {		
 		final String logPrefix = "[" + this.getDestinationUrl() + "] ";
 		
 		logger.trace(logPrefix + "Downloading and scraping page contents...");
@@ -203,6 +203,12 @@ public class LintedPage {
 			if (contentType == null)
 				contentType = "unknown";
 			if (!contentType.toLowerCase().contains("text/html") && !contentType.toLowerCase().contains("text/plain")) {
+								
+				if( contentType.toLowerCase().contains("image/png") || contentType.toLowerCase().contains("image/jpeg") ) {
+					getMetaData().put( "preview-image-url", this.getDestinationUrl() );
+					_parseOk = true;
+				}
+				
 				logger.warn(logPrefix + "Not downloading or scraping page because content-type was: " + contentType);
 				return;
 			}
