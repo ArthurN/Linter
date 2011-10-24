@@ -50,6 +50,7 @@ public class LintedPage {
 	private String _originalUrl;
 	private String[] _aliases = {};
 	private String _destinationUrl;
+	private ArrayList<String> _redirectUrlList;
 	
 	private long _processingTime;
 	private static TrustManager[] TRUST_MANAGER = null;
@@ -62,6 +63,7 @@ public class LintedPage {
 	public LintedPage(String originalUrl) {
 		_originalUrl = originalUrl;
 		_metaData = new LintedData();
+		_redirectUrlList = new ArrayList<String>();
 	}
 	
 	/***
@@ -105,6 +107,7 @@ public class LintedPage {
 		while (currentLocation != null) {
 			try {
 				URL url = new URL(currentLocation);
+				_redirectUrlList.add( currentLocation );
 				
 				logger.trace("Following " + currentLocation + "...");										
 			    
@@ -249,6 +252,7 @@ public class LintedPage {
 		
 		ServiceParser parser = ServiceParserChainManager.getInstance().getServiceParser( this.getDestinationUrl() );
 		parser.setRawContent( inStr );
+		parser.setRedirectUrlList( _redirectUrlList );
 		_parseOk = parser.parse();
 		_metaData = parser.getMetaData();
 	}

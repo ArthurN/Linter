@@ -1,6 +1,7 @@
 package org.linter;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,6 +37,8 @@ public abstract class ServiceParser {
 	// URL
 	protected String _url;
 	
+	protected ArrayList<String> _redirectUrlList;
+	
 	// Error state
 	protected String _parseError;
 	
@@ -46,10 +49,7 @@ public abstract class ServiceParser {
 	protected Source _jerichoSource;
 	
 	// Meta Data
-	//protected JSONObject _metaData;
-	protected LintedData _metaData;
-	//protected String _providerUrl;
-	//protected String _providerName;	
+	protected LintedData _metaData;	
 	
 		
 	public ServiceParser() {		
@@ -57,6 +57,7 @@ public abstract class ServiceParser {
 		_url = "";
 		//_metaData = new JSONObject();
 		_metaData = new LintedData();
+		_redirectUrlList = null;
 	}
 
 	/*
@@ -99,6 +100,14 @@ public abstract class ServiceParser {
 	}
 	
 	/*
+	 * Set the URL Redirection List
+	 * @param redirectUrlList
+	 */
+	public void setRedirectUrlList( ArrayList<String> redirectUrlList ) {
+		_redirectUrlList = redirectUrlList;
+	}
+	
+	/*
 	 * Continue parsing with successor ServiceParser, if available
 	 * @return true if success, false if failed or end of chainj
 	 */
@@ -110,7 +119,6 @@ public abstract class ServiceParser {
 			ret  = _successor.parse();
 			if( ret ) {
 				getMetaData().mergeLintedData( _successor.getMetaData() );
-				//mergeMetaData( _successor );
 			}
 		}
 		
