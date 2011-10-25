@@ -10,6 +10,7 @@ import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -255,6 +256,24 @@ public class LintedPage {
 		parser.setRedirectUrlList( _redirectUrlList );
 		_parseOk = parser.parse();
 		_metaData = parser.getMetaData();
+
+		// Update the URL, if modified by the ServiceParser
+		String url = _metaData.getString( "url" );
+		if( url != null && !url.isEmpty() ) {
+			_destinationUrl = url;
+		}
+		
+		// Update alias URLs, if modified by the ServiceParser
+		if( _metaData.get( "alias_urls" ) != null ) {
+			Object[] arr = (Object[]) _metaData.get( "alias_urls" );
+			_aliases = Arrays.copyOf( arr, arr.length, String[].class);
+		}
+		
+		// Get any parse error from the ServiceParser
+		String parseError = parser.getParseError();
+		if( parseError != null && !parseError.isEmpty() ) {
+			_parseError = parseError;
+		}
 	}
 	
 	/***
@@ -397,4 +416,5 @@ public class LintedPage {
 	public LintedData getMetaData() {
 		return _metaData;
 	}
+	
 }

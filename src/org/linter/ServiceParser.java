@@ -50,14 +50,16 @@ public abstract class ServiceParser {
 	
 	// Meta Data
 	protected LintedData _metaData;	
+
 	
-		
 	public ServiceParser() {		
 		_successor = null;
 		_url = "";
 		//_metaData = new JSONObject();
 		_metaData = new LintedData();
+		_metaData.put( "meta_provider", "linter" );
 		_redirectUrlList = null;
+		_parseError = null;
 	}
 
 	/*
@@ -119,6 +121,7 @@ public abstract class ServiceParser {
 			ret  = _successor.parse();
 			if( ret ) {
 				getMetaData().mergeLintedData( _successor.getMetaData() );
+				setParseError( _successor.getParseError() );
 			}
 		}
 		
@@ -192,4 +195,20 @@ public abstract class ServiceParser {
 	protected LintedData getMetaData() {
 		return _metaData;
 	}	
+	
+	/*
+	 * Get Parse Error
+	 * @return String Parse Error
+	 */
+	public String getParseError() {
+		return _parseError;
+	}
+	
+	/*
+	 * Set Parse Error
+	 * @param Parse Error
+	 */
+	protected void setParseError( String parseError ) {
+		_parseError = parseError;
+	}
 }
