@@ -49,7 +49,7 @@ public class LintedPage {
 	
 	private LintedData _metaData;
 	private String _originalUrl;
-	private String[] _aliases = {};
+	private ArrayList<String> _aliases;
 	private String _destinationUrl;
 	private ArrayList<String> _redirectUrlList;
 	
@@ -65,6 +65,7 @@ public class LintedPage {
 		_originalUrl = originalUrl;
 		_metaData = new LintedData();
 		_redirectUrlList = new ArrayList<String>();
+		_aliases = new ArrayList<String>();
 	}
 	
 	/***
@@ -179,7 +180,7 @@ public class LintedPage {
 			}
 		}
 		
-		_aliases = aliases.toArray(new String[0]);
+		_aliases = aliases;
 
 		return true;
 	}
@@ -265,8 +266,8 @@ public class LintedPage {
 		
 		// Update alias URLs, if modified by the ServiceParser
 		if( _metaData.get( "alias_urls" ) != null ) {
-			Object[] arr = (Object[]) _metaData.get( "alias_urls" );
-			_aliases = Arrays.copyOf( arr, arr.length, String[].class);
+			Object[] arr = (Object[]) _metaData.get( "alias_urls" );			
+			_aliases = new ArrayList<String>( Arrays.asList( Arrays.copyOf( arr, arr.length, String[].class) ) );
 		}
 		
 		// Get any parse error from the ServiceParser
@@ -305,7 +306,7 @@ public class LintedPage {
 	 * @return
 	 */
 	public String[] getAliases() {
-		return _aliases;
+		return _aliases.toArray(new String[0]);
 	}
 	
 	/***
@@ -351,7 +352,7 @@ public class LintedPage {
 			sb.append("\tPARSE ERROR:\t\t"); sb.append(this.getParseError()); sb.append('\n');
 		}
 		sb.append("\tALIASES:");
-			if (_aliases == null || _aliases.length == 0)
+			if (_aliases == null || _aliases.size() == 0)
 				sb.append("\t\tNONE\n");
 			else {
 				sb.append('\n');
@@ -417,4 +418,16 @@ public class LintedPage {
 		return _metaData;
 	}
 	
+	/*
+	 * Remove a list of parameters from a URL
+	 * Automatically adds the original url to the alias list
+	 * @param parameters
+	 */
+	public void removeDestinationUrlParamters( String[] parameters ) {		
+		String urlRemoved = URLParser.removeParameters( _destinationUrl, parameters );
+		if( urlRemoved.compareTo( _destinationUrl ) != 0 ) {
+			_aliases.add( _destinationUrl );
+			_destinationUrl = urlRemoved;
+		}		
+	}
 }
