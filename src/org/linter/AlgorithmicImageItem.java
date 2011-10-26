@@ -236,6 +236,11 @@ public class AlgorithmicImageItem {
 	 * text (e.g. "100px" -> 100 )
 	 */
 	private int dimensionStringToInt( String dimension ) {
-		return ( dimension != null && !dimension.isEmpty() ) ? Integer.parseInt( dimension.replaceAll( "[^0-9]", "" ) ) : UNSPECIFIED_IMAGE_DIM;
+		if( dimension == null || dimension.isEmpty() ) {
+			return UNSPECIFIED_IMAGE_DIM;
+		}
+		
+		String dimensionNum = dimension.replaceAll( "[^0-9]", "" );
+		return ( !dimensionNum.isEmpty() ) ? Integer.parseInt( dimensionNum ) : UNSPECIFIED_IMAGE_DIM;
 	}
 }
