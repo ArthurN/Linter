@@ -163,15 +163,21 @@ public class ServiceParserAlgorithmic extends ServiceParser {
 		// <link rel="image_src" href="http://www.provider.com/image.jpg" />
 		Element imagePreviewOG = source.getFirstElement( "property", "og:image", false );
 		if( imagePreviewOG != null ) {			
-			imagePreviewUrl = imagePreviewOG.getAttributeValue( "content" );
-			logger.trace( _logPrefix + "Preview image found in og:image" );
+			String imagePreviewUrlOG = imagePreviewOG.getAttributeValue( "content" ); 
+			if( isPreviewUrlValid( imagePreviewUrlOG ) ) {
+				imagePreviewUrl = imagePreviewUrlOG;
+				logger.trace( _logPrefix + "Preview image found in og:image" );
+			}			
 		}
 		
 		if( imagePreviewUrl == null ) {
 			Element imagePreviewRel = source.getFirstElement( "rel", "image_src", false );
 			if( imagePreviewRel != null ) {
-				imagePreviewUrl = imagePreviewRel.getAttributeValue( "href" );
-				logger.trace( _logPrefix + "Preview image found in link rel=image_src" );
+				String imagePreviewUrlRel = imagePreviewRel.getAttributeValue( "href" );
+				if( isPreviewUrlValid( imagePreviewUrlRel ) ) {
+					imagePreviewUrl = imagePreviewUrlRel;
+					logger.trace( _logPrefix + "Preview image found in link rel=image_src" );
+				}				
 			}
 		}
 		
@@ -196,4 +202,20 @@ public class ServiceParserAlgorithmic extends ServiceParser {
 		return true;
 	}
 
+	/*
+	 * Basic test for valid image preview urls
+	 * Test for null, empty, and '/'
+	 * Relative URLs are acceptable
+	 * @param url Image url
+	 * @return true if valid
+	 */
+	private boolean isPreviewUrlValid( String url ) {
+		boolean valid = false;
+		if( ( url != null ) 
+			&& ( !url.isEmpty() )
+			&& ( url.compareTo( "/") != 0 ) ) {
+			valid = true;
+		}
+		return valid;
+	}
 }
