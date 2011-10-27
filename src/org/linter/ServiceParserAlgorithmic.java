@@ -44,6 +44,11 @@ public class ServiceParserAlgorithmic extends ServiceParser {
 	 */
 	@Override public boolean parse() {		
 		Source source = getJerichoSource();
+
+		if( source == null ) {
+			logger.warn( "Source is null! Skipping." );
+			return false;
+		}
 		
 		parseTitle( source );
 		parseDescription( source );

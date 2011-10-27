@@ -240,7 +240,16 @@ public class AlgorithmicImageItem {
 			return UNSPECIFIED_IMAGE_DIM;
 		}
 		
-		String dimensionNum = dimension.replaceAll( "[^0-9]", "" );
-		return ( !dimensionNum.isEmpty() ) ? Integer.parseInt( dimensionNum ) : UNSPECIFIED_IMAGE_DIM;
+		String dimensionNum = dimension.replaceAll( "[^0-9]", "" );		
+		int dimensionInt = UNSPECIFIED_IMAGE_DIM;
+		if( !dimensionNum.isEmpty() ) {
+			try {
+				dimensionInt = Integer.parseInt( dimensionNum );
+			} catch( NumberFormatException e ) {
+									
+			}
+		}
+			
+		return dimensionInt;
 	}
 }
