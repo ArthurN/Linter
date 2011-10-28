@@ -430,4 +430,25 @@ public class LintedPage {
 			_destinationUrl = urlRemoved;
 		}		
 	}
+	
+	/*
+	 * Identifies if the Linted Page has a complete set of basic meta data
+	 * This is somewhat arbitrary, but includes Title, Description, and Preview Image URL
+	 * 
+	 * TODO: Consider relocating to a more consumer-specific location
+	 * 
+	 * @param LintedPage
+	 * @return true if complete set
+	 */
+	public boolean hasBasicMetaDataSet() {		
+		boolean complete = false;
+		
+		LintedData data = getMetaData();
+		if( ( data.hasKey( "title" ) && !data.getString( "title" ).isEmpty() ) 
+			&& ( data.hasKey( "description" ) && !data.getString( "description" ).isEmpty() )
+			&& ( data.hasKey( "preview-image-url" ) && !data.getString( "preview-image-url" ).isEmpty() ) ) {
+			complete = true;
+		}
+		return complete;
+	}
 }

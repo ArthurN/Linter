@@ -52,6 +52,15 @@ public class LintedData {
 	}
 	
 	/*
+	 * Determine if LintedData has a record matching the key
+	 * @param String key
+	 * @return true if exists
+	 */
+	public boolean hasKey( String key ) {
+		return _data.containsKey( key );
+	}
+	
+	/*
 	 * Get Object from Meta Data as String
 	 * @param key
 	 * @return String

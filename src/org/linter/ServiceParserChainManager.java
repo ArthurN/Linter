@@ -64,14 +64,20 @@ public class ServiceParserChainManager {
 	public ServiceParser getServiceParser(String url) {
 		logger.trace( "Determining appropriate ServiceParsers for url: " + url );
 		
-		ArrayList<ServiceParser> parserList = new ArrayList<ServiceParser>();
+		ArrayList<ServiceParser> fullParserList = new ArrayList<ServiceParser>();
+		ArrayList<ServiceParser> partialParserList = new ArrayList<ServiceParser>();
 		
 		for( Pattern p : _servicePatterns.keySet() ) {
 
 			if( p != null && p.matcher( url ).matches() ) {
 				try {
-					ServiceParser parser = (ServiceParser) _servicePatterns.get( p ).newInstance();					
-					parserList.add( parser );
+					ServiceParser parser = (ServiceParser) _servicePatterns.get( p ).newInstance();
+					if( parser.isPartialParser() ) {
+						partialParserList.add( parser );
+					} else {
+						fullParserList.add( parser );
+					}
+					
 					logger.trace( "Found parser: " + parser.getClass() );
 				} catch( Exception e ) {
 					logger.error( "Failed to instantiate ServiceParser: " + e );
@@ -79,39 +85,16 @@ public class ServiceParserChainManager {
 			}
 		}
 		
-		if( parserList.size() == 0 ) {
-			parserList.add( new ServiceParserAlgorithmic() );
+		if( fullParserList.size() == 0 ) {
+			fullParserList.add( new ServiceParserAlgorithmic() );
 		}
 		
-		sortParserListByComplexity( parserList );		
+		ArrayList<ServiceParser> parserList = new ArrayList<ServiceParser>();
+		parserList.addAll( fullParserList );
+		parserList.addAll( partialParserList );		
 		ServiceParser ret = linkParserList( parserList );
 		ret.initialize( url );
 		return ret;
-	}
-
-	/*
-	 * Sort Parser List by Complexity
-	 * REMOVE/MODIFY
-	 */
-	private void sortParserListByComplexity( ArrayList<ServiceParser> parserList ) {
-		boolean finished = false;
-		
-		while( !finished ) {
-			boolean changes = false;
-			
-			for( int i = 0; i < parserList.size() - 1; i++ ) {
-				if( parserList.get( i + 1 ).getServicePattern().toString().length() > parserList.get( i ).getServicePattern().toString().length() ) {
-					ServiceParser temp = parserList.get( i + 1 );
-					parserList.set( i + 1, parserList.get( i ) );
-					parserList.set( i, temp );
-					changes = true;
-				}
-			}
-			
-			if( !changes ) {
-				finished = true;
-			}
-		}
 	}
 	
 	/*
@@ -126,4 +109,5 @@ public class ServiceParserChainManager {
 		
 		return parserList.get( 0 );
 	}
+
 }

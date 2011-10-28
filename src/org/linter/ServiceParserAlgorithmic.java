@@ -17,6 +17,9 @@ import net.htmlparser.jericho.Source;
 public class ServiceParserAlgorithmic extends ServiceParser {
 
 	protected String _logPrefix;
+	private static final Pattern PATTERN = Pattern.compile( 
+			".*" 
+			);
 	
 	public ServiceParserAlgorithmic() {
 	}
@@ -35,14 +38,14 @@ public class ServiceParserAlgorithmic extends ServiceParser {
 	 * @return Pattern matching anything
 	 */
 	@Override public Pattern getServicePattern() {
-		return null;
+		return PATTERN;
 	}	
 	
 	/*
 	 * Parse meta data
 	 * @return 
 	 */
-	@Override public boolean parse() {		
+	@Override public boolean parse() {
 		Source source = getJerichoSource();
 
 		if( source == null ) {
@@ -54,7 +57,7 @@ public class ServiceParserAlgorithmic extends ServiceParser {
 		parseDescription( source );
 		parseFavIconUrl( source );	
 		parsePreviewImage( source );
-		
+		parseWithSuccessor();
 		return true;
 	}
 	
@@ -98,7 +101,19 @@ public class ServiceParserAlgorithmic extends ServiceParser {
 				if (contentAttr != null)
 					description = CharacterReference.decodeCollapseWhiteSpace(contentAttr);
 			}
-			
+
+			// Check for og:description tag
+			// <meta property="og:description" content="Description text">
+			if( description.isEmpty() ) {
+				descElement = source.getFirstElement( "property", "og:description", false );
+				if( descElement != null && descElement.getName().equalsIgnoreCase( HTMLElementName.META ) ) {
+					String contentAttr = descElement.getAttributeValue( "content" );
+					if( contentAttr != null ) {
+						description = CharacterReference.decodeCollapseWhiteSpace( contentAttr );
+					}
+				}
+			}
+
 			if (description != null) {
 				logger.trace(_logPrefix + "DESCRIPTION: " + description);
 			} else {

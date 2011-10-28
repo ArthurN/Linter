@@ -68,7 +68,12 @@ public abstract class ServiceParser {
 	 */
 	public void initialize(String url) {
 		_url = url;		
-		parseProviderNameAndUrl();		
+		parseProviderNameAndUrl();
+		
+		// Recursively initialize successors
+		if( _successor != null ) {
+			_successor.initialize( _url );
+		}
 	}
 	
 	/*
@@ -115,9 +120,10 @@ public abstract class ServiceParser {
 	 */
 	protected boolean parseWithSuccessor() {
 		boolean ret = false;
-		
+				
 		if( _successor != null ) {
 			_successor.setJerichoSource( getJerichoSource() );
+			_successor.setMetaData( getMetaData() );
 			ret  = _successor.parse();
 			if( ret ) {
 				getMetaData().mergeLintedData( _successor.getMetaData() );
@@ -210,5 +216,30 @@ public abstract class ServiceParser {
 	 */
 	protected void setParseError( String parseError ) {
 		_parseError = parseError;
+	}
+
+	/*
+	 * Determine if this is a partial parser
+	 * @return true if partial parser
+	 */
+	public boolean isPartialParser() {
+		
+		Class<?> cls = this.getClass().getSuperclass();
+		while( cls != null ) {
+			if( cls == ServiceParserPartial.class ) {
+				return true;
+			}
+			cls = cls.getSuperclass();
+		}
+		
+		return false;
+	}
+	
+	/*
+	 * Set Meta Data
+	 * @param LintedData metaData
+	 */
+	public void setMetaData( LintedData metaData ) {
+		_metaData = metaData;
 	}
 }
