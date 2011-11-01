@@ -242,4 +242,13 @@ public abstract class ServiceParser {
 	public void setMetaData( LintedData metaData ) {
 		_metaData = metaData;
 	}
+	
+	public String getUrl() {
+		return _url;
+	}
+	
+	protected ArrayList<String> getRedirectUrlList() {
+		return _redirectUrlList;
+	}
+
 }
