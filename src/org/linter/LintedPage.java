@@ -107,7 +107,7 @@ public class LintedPage {
 		String lastLocation = null;
 		
 		while (currentLocation != null) {
-			try {
+			try {				
 				URL url = new URL(currentLocation);
 				_redirectUrlList.add( currentLocation );
 				
@@ -425,7 +425,7 @@ public class LintedPage {
 	 */
 	public void removeDestinationUrlParamters( String[] parameters ) {		
 		String urlRemoved = URLParser.removeParameters( _destinationUrl, parameters );
-		if( urlRemoved.compareTo( _destinationUrl ) != 0 ) {
+		if( urlRemoved != null && urlRemoved.compareTo( _destinationUrl ) != 0 ) {
 			_aliases.add( _destinationUrl );
 			_destinationUrl = urlRemoved;
 		}		
