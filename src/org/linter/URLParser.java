@@ -11,8 +11,16 @@ public class URLParser {
 	 * @param removeParameters
 	 * @return String url with removed parameters
 	 */
-	public static String removeParameters( String url, String[] removeParameters ) {				
-				
+	public static String removeParameters( String url, String[] removeParameters ) {		
+		
+		// Bail on bad data
+		if( url == null ||
+			url.isEmpty() ||
+			removeParameters == null ||
+			removeParameters.length == 0 ) {
+			return url;
+		}
+			
 		// Parse Parameter List
 		String[] urlComponents = url.split( "\\?" );
 		
