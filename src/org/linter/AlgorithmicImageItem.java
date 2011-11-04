@@ -61,9 +61,14 @@ public class AlgorithmicImageItem {
 	 */
 	public void setUrl( String url, String providerUrl ) {
 		// Check if image src is relative url
-		if( url != null ) {
+		if( url != null ) {			
 			if( !url.contains(RELATIVE_URL_TEST) ) {
+				
+				if( !providerUrl.endsWith( "/" ) ) {
+					providerUrl += "/";
+				}				
 				_url = providerUrl + url;
+				
 			} else {
 				_url = url;
 			}
