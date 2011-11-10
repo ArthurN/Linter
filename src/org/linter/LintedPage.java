@@ -25,9 +25,20 @@ import javax.net.ssl.X509TrustManager;
 
 import org.apache.log4j.Logger;
 
+/**
+ * Fetch a web page meta data by URL, performs all URL redirection and interaction
+ * with ServiceParsers 
+ */
 public class LintedPage {
+	
+	/**
+	 * Log4J Logger
+	 */
 	static private Logger logger = Logger.getLogger(LintedPage.class);
 	
+	/**
+	 * Pattern for matching specific parts of URLs
+	 */
 	private static final Pattern URL_PATTERN = Pattern.compile(
 			"^((\\w+)://)?" +
 			"((\\w+):?(\\w+)?@)?" + 
@@ -38,28 +49,82 @@ public class LintedPage {
 			"\\??" +
 			"([^#]+)?" +
 			"#?(\\w*)");
+	
+	/**
+	 * Pattern for determining if a URL is full or relative
+	 */
 	private static final String RELATIVE_URL_TEST = "://";
+	
+	/**
+	 * HTTP User Agent
+	 */
 	public static final String HTTP_USER_AGENT = "Mozilla/5.0 (compatible; Linter/1.0)"; // our own custom user agent based on Googlebot
+	
+	/**
+	 * HTTP Connection Timeout
+	 */
 	public static final int HTTP_CONNECT_TIMEOUT = 10000;	// 10 sec
+	
+	/**
+	 * HTTP Read Timeout
+	 */
 	public static final int HTTP_READ_TIMEOUT = 5000;	// 5 sec
+	
+	/**
+	 * HTTP Max Content Length, 1MB
+	 */
 	public static final int HTTP_MAX_CONTENT_LENGTH = 1048576; 	// 1 MB in bytes 
 	
+	/*
+	 * Trust manager for SSL
+	 */
+	private static TrustManager[] TRUST_MANAGER = null;
+	
+	/**
+	 * Parse OK State
+	 */
 	private boolean _parseOk = false;
+	
+	/**
+	 * Parse Error
+	 */
 	private String _parseError;
 	
+	/**
+	 * Scraped meta data
+	 */
 	private LintedData _metaData;
+	
+	/**
+	 * Original URL provided by Linter Consumer, not redirected
+	 */
 	private String _originalUrl;
+	
+	/**
+	 * List of all alias URLs found in redirection and stripping parameters 
+	 */
 	private ArrayList<String> _aliases;
+	
+	/**
+	 * Destination URL after all redirection
+	 */
 	private String _destinationUrl;
+	
+	/**
+	 * List of all redirections, subset of aliases
+	 */
 	private ArrayList<String> _redirectUrlList;
 	
+	/*
+	 * Total processing, downloading, and meta data scrape time
+	 */
 	private long _processingTime;
-	private static TrustManager[] TRUST_MANAGER = null;
+	
 	 
 		
 	/**
 	 * Create a blank linted page, expects you to call {@link process} at some point 
-	 * @param originalUrl - the URL to be processed
+	 * @param originalUrl	URL to be processed
 	 */
 	public LintedPage(String originalUrl) {
 		_originalUrl = originalUrl;
@@ -71,7 +136,7 @@ public class LintedPage {
 	/***
 	 * Process the original URL, including alias resolution, scraping and metadata extraction
 	 */
-	void process() {
+	public void process() {
 		final long startTime = System.nanoTime();
 		final long endTime;
 		try {
@@ -85,7 +150,7 @@ public class LintedPage {
 	/***
 	 * Process the original URL associated with this LintedPage
 	 */
-	protected void processRunner() {
+	private void processRunner() {
 		logger.info("Processing URL: " + _originalUrl);
 		
 		logger.debug("Expanding any shortened URLs...");
@@ -277,9 +342,9 @@ public class LintedPage {
 		}
 	}
 	
-	/***
+	/**
 	 * Whether or not the parse completed successfully
-	 * @return
+	 * @return True if successful
 	 */
 	public Boolean getParseOk() {
 		return _parseOk;
@@ -287,31 +352,31 @@ public class LintedPage {
 	
 	/**
 	 * The error message we encountered during parsing, if any
-	 * @return
+	 * @return Parser error
 	 */
 	public String getParseError() {
 		return _parseError;
 	}
 	
-	/***
+	/**
 	 * Returns the original URL (before any shortened URLs were expanded)
-	 * @return
+	 * @return Original URL
 	 */
 	public String getOriginalUrl() {
 		return _originalUrl;
 	}
 	
-	/***
+	/**
 	 * Gets any aliases for this URL -- e.g. any redirects between the original URL and its actual destination
-	 * @return
+	 * @return Array of alias URLs
 	 */
 	public String[] getAliases() {
 		return _aliases.toArray(new String[0]);
 	}
 	
-	/***
+	/**
 	 * Gets the final destination, after expanding any shortened URLs starting from the original URL
-	 * @return
+	 * @return Final, resolved URL
 	 */
 	public String getDestinationUrl() {
 		// If we failed to parse, the destination URL might not be set, so let's just make it the original URL since
@@ -321,17 +386,17 @@ public class LintedPage {
 		return _destinationUrl;
 	}
 		
-	/***
+	/**
 	 * Gets the processing time in milliseconds
-	 * @return
+	 * @return Time in MS
 	 */
 	public long getProcessingTimeMillis() {
 		return TimeUnit.NANOSECONDS.toMillis(_processingTime);
 	}
 	
-	/***
+	/**
 	 * Gets the processing time in human-readable format
-	 * @return
+	 * @return Time, human-readable
 	 */
 	public String getProcessingTimeForHumans() {
 
@@ -344,6 +409,10 @@ public class LintedPage {
 		return String.format("%.4f", millis);
 	}
 	
+	/**
+	 * Output Linter status and meta data as a human-readable string
+	 * @return Linter status and meta data 
+	 */
 	public String toDebugString() {
 		StringBuilder sb = new StringBuilder(_originalUrl);
 		sb.append(" {\n");
@@ -374,14 +443,16 @@ public class LintedPage {
 		return sb.toString();
 	}	
 	
-	
+	/**
+	 * Get pattern matcher for detecting full URLs
+	 * @return URL pattern matcher
+	 */
 	private Matcher getUrlMatcher(String url) {
 		return LintedPage.URL_PATTERN.matcher(url);
 	}
 
-	/*
-	 * Initialize Trust Manager
-	 * Does not checking, accepts all certificates
+	/**
+	 * Initialize trust manager- does no checking, accepts all certificates
 	 */
 	private void initTrustManager() throws KeyManagementException {
 
@@ -410,18 +481,17 @@ public class LintedPage {
 		}			    	    
 	}
 	
-	/*
-	 * Get Meta Data
+	/**
+	 * Get LintedData object containing all meta data scraped from this page
 	 * @return LintedData
 	 */
 	public LintedData getMetaData() {
 		return _metaData;
 	}
 	
-	/*
-	 * Remove a list of parameters from a URL
-	 * Automatically adds the original url to the alias list
-	 * @param parameters
+	/**
+	 * Remove a list of parameters from a URL, automatically adds the original url to the alias list
+	 * @param parameters	Array of parameters to remove from URL 
 	 */
 	public void removeDestinationUrlParamters( String[] parameters ) {		
 		String urlRemoved = URLParser.removeParameters( _destinationUrl, parameters );
@@ -431,13 +501,12 @@ public class LintedPage {
 		}		
 	}
 	
-	/*
+	/**
 	 * Identifies if the Linted Page has a complete set of basic meta data
 	 * This is somewhat arbitrary, but includes Title, Description, and Preview Image URL
 	 * 
 	 * TODO: Consider relocating to a more consumer-specific location
 	 * 
-	 * @param LintedPage
 	 * @return true if complete set
 	 */
 	public boolean hasBasicMetaDataSet() {		

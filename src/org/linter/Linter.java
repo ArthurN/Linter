@@ -2,12 +2,19 @@ package org.linter;
 
 import org.apache.log4j.Logger;
 
+/**
+ * Linter command-line application
+ */
 public class Linter {
+	
+	/**
+	 * Log4J Logger
+	 */
 	static private Logger logger = Logger.getLogger(Linter.class);
 	
-	/***
+	/**
 	 * Run Linter as a command-line to optionally test URLs via CLI
-	 * @param args The URLs to resolve
+	 * @param args	List of URLs to resolve
 	 */
 	public static void main(String[] args) {				
 		if (args.length == 0) {
@@ -25,7 +32,12 @@ public class Linter {
 		}
 	}
 	
-	public static final LintedPage processUrl(String url) {
+	/**
+	 * Process a url
+	 * @param url	URL to process
+	 * @return		Scraped LintedPage
+	 */
+	private static final LintedPage processUrl(String url) {
 		LintedPage lp = new LintedPage(url);
 		lp.process();
 		return lp;

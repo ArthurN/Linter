@@ -9,10 +9,10 @@ import java.net.URLConnection;
 
 import javax.imageio.ImageIO;
 
-/*
- * Algorithmic Image Item
- * Stores image data for algorithmically determining best preview
- * image
+/**
+ * Algorithmic Image Item 
+ * 
+ * Stores image data for algorithmically determining best preview image
  */
 public class AlgorithmicImageItem {
 	protected static final String RELATIVE_URL_TEST = "://";

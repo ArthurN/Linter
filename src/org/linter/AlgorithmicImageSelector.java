@@ -11,43 +11,63 @@ import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.Source;
 
-/*
- * Determine the best Preview Image
- * Algorithm scans HTML and filters out the most likely preview images
- * from a variety of factors
+/**
+ * Determine the best preview image, algorithm scans HTML and picks the most likely
+ * preview image from a variety of factors, including size, format, name, and repetition
  */
 public class AlgorithmicImageSelector {
 
+	/**
+	 * Log4J Logger
+	 */
 	static protected Logger logger = Logger.getLogger( AlgorithmicImageSelector.class );
 	
-	// Minimum size for preview image dimensions
-	static final int MIN_PREVIEW_IMAGE_DIM = 75;
+	/**
+	 *  Logger Prefix
+	 */
+	protected String _logPrefix;
 	
-	// Minimum allowable aspect ratio, prevent skyscrapers
-	static final float MIN_ASPECT_RATIO = 0.2f; // 1:5
+	/**
+	 * Minimum size for preview image dimensions
+	 */
+	protected static final int MIN_PREVIEW_IMAGE_DIM = 75;
 	
-	// Maximum allowable aspect ratio, prevent banners
-	static final float MAX_ASPECT_RATIO = 5.0f; // 5:1
+	/**
+	 *  Minimum allowable aspect ratio, prevent skyscrapers
+	 */
+	protected static final float MIN_ASPECT_RATIO = 0.2f; // 1:5
 	
-	// Maximum allowable file size for preview images
-	static final int MAX_FILE_SIZE = 100 * 1024;
+	/**
+	 *  Maximum allowable aspect ratio, prevent banners
+	 */
+	protected static final float MAX_ASPECT_RATIO = 5.0f; // 5:1
 	
-	// Provider for fixing relative URLs (e.g. http://www.facebook.com)
-	String _providerUrl;
+	/**
+	 *  Maximum allowable file size for preview images
+	 */
+	protected static final int MAX_FILE_SIZE = 100 * 1024;
 	
-	// Jericho Parser Source
-	Source _source;
+	/**
+	 *  Provider for fixing relative URLs (e.g. http://www.facebook.com)
+	 */
+	protected String _providerUrl;
 	
-	// Potential set of usable images
-	ArrayList<AlgorithmicImageItem> _potentialSet;	
+	/**
+	 *  Jericho Parser Source
+	 */
+	protected Source _source;
 	
-	// Logger Prefix
-	String _logPrefix;
+	/**
+	 *  Potential set of usable images
+	 */
+	protected ArrayList<AlgorithmicImageItem> _potentialSet;	
 	
-	/*
+	
+	
+	/**
 	 * Constructor
-	 * @param source Jericho source
-	 * @param providerUrl URL provider (e.g. http://www.facebook.com)
+	 * @param source		Jericho source
+	 * @param providerUrl 	URL provider (e.g. http://www.facebook.com)
 	 */
 	public AlgorithmicImageSelector(Source source, String providerUrl, String logPrefix ) {
 		_providerUrl = providerUrl;
@@ -55,9 +75,9 @@ public class AlgorithmicImageSelector {
 		_logPrefix = logPrefix;
 	}
 
-	/*
-	 * Get Preview URL
-	 * Run the algorithmic preview image selector
+	/**
+	 * Pick the best preview image
+	 * @return URL of most likely preview image 
 	 */
 	public String getPreviewUrl() {
 		logger.trace( "Algorithmically selecting preview image" );
@@ -131,11 +151,10 @@ public class AlgorithmicImageSelector {
 		return imageUrl;
 	}
 	
-	/*
-	 * Parse All Images
+	/**
 	 * Find all images from the Jericho source and add to the potential image set
 	 */
-	public void parseAllImages() {
+	private void parseAllImages() {
 		_potentialSet = new ArrayList<AlgorithmicImageItem>();
 		
 		List<Element> imageElements = _source.getAllElements( HTMLElementName.IMG );
@@ -150,11 +169,11 @@ public class AlgorithmicImageSelector {
 		}			
 	}	
 	
-	/* 
-	 * Remove Blacklisted Images
-	 * Remove any URLs matching a blacklist. Obvious advertisements.
+	/**
+	 * Remove any URLs matching a blacklist from the potential image set, mostly
+	 * obvious advertisements urls
 	 */
-	public void removeBlacklistedImages() {		
+	private void removeBlacklistedImages() {		
 		
 		// A few choices from massive list on http://someonewhocares.org/hosts/
 		final String[] URL_BLACKLIST = {						
@@ -194,12 +213,11 @@ public class AlgorithmicImageSelector {
 		}
 	}
 	
-	/*
-	 * Remove Images with Matching Dimensions
+	/**
 	 * Remove any images from the potential set if there are 3+ other images
-	 * with the same dimensions. These are often preview images for other pages.
+	 * with the same dimensions, these are often preview images for other pages.
 	 */
-	public void removeMatchingDimensions() {
+	private void removeMatchingDimensions() {
 		
 		// Threshold of matching image dimensions where it's safe to start removing
 		final int MATCHING_IMAGE_COUNT_THRESHOLD = 3;
@@ -245,13 +263,12 @@ public class AlgorithmicImageSelector {
 	}
 	
 	
-	/*
-	 * Reduce Score by Dimension
+	/**
 	 * Reduce the score of all potential images matching certain dimensions.
 	 * Most are standard advertising image sizes. Also reduces score if smaller
 	 * than the minimum preview dimensions. Images with undefined sizes are ignored
 	 */
-	public void reduceScoreByDimension() {
+	private void reduceScoreByDimension() {
 		// Compare image to standard advertisement sizes
 		// http://en.wikipedia.org/wiki/Web_banner
 		final int STANDARD_AD_SIZES[][] = { 
@@ -298,8 +315,7 @@ public class AlgorithmicImageSelector {
 		}
 	}
 	
-	/*
-	 * Reduce Score by Miss Name
+	/**
 	 * Reduce score for any images with an ID or Class name matching
 	 * terms commonly associated with non-preview images (e.g. buttons, banners, etc)
 	 */
@@ -338,8 +354,7 @@ public class AlgorithmicImageSelector {
 	}
 
 	
-	/*
-	 * Increase Score by Hit Name
+	/**
 	 * Increase score for images with Id or Class names matching
 	 * terms commonly associated with preview images
 	 */
@@ -360,8 +375,7 @@ public class AlgorithmicImageSelector {
 		}
 	}
 
-	/*
-	 * Increase Score by Format
+	/**
 	 * Increase score for images matching preferred image extensions
 	 */
 	private void increaseScoreByFormat() {
@@ -380,8 +394,7 @@ public class AlgorithmicImageSelector {
 		}
 	}
 			
-	/*
-	 * Increase Largest Image Score
+	/**
 	 * Increase the score for the largest image
 	 */
 	private void increaseLargestImageScore() {
@@ -397,9 +410,9 @@ public class AlgorithmicImageSelector {
 		}
 	}
 
-	/*
-	 * Get the Highest Scored Image
-	 * @return AlgorithmicImageItem with highest score
+	/**
+	 * Get the image with the highest score
+	 * @return Image with highest score
 	 */
 	private AlgorithmicImageItem getHighestScoredImage() {
 		AlgorithmicImageItem maxImage = null;
@@ -411,9 +424,10 @@ public class AlgorithmicImageSelector {
 		return maxImage;
 	}
 	
-	/*
-	 * Get Dimension Key
+	/**
 	 * Key used for matching images with like dimensions
+	 * 
+	 * @return String corresponding to image dimensions
 	 */
 	private String getDimensionKey( int width, int height ) {
 		return width + "_" + height;

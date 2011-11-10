@@ -6,29 +6,42 @@ import java.util.regex.Pattern;
 
 import net.htmlparser.jericho.Source;
 
-/*
+/**
  * Sets the "type" field, indicating that a page has been recognized
- * to have a focus on a Photo, Image, or general page content.
+ * to have a focus on a Photo, Image, or general page content;
  * 
- * The pattern matches all URLs
+ * The pattern matches all URLs;
  * 
  * Images are identified by URLs matching known, popular image hosting
- * providers.
+ * providers;
  * 
- * Videos are identified by the presence of video meta data
+ * Videos are identified by the presence of video meta data;
  */
 public class ServiceParserTypesetter extends ServiceParserPartial {
 	
-	// Match any URL
+	/**
+	 * URL pattern, wildcard
+	 */
 	private static final Pattern PATTERN = Pattern.compile( 
 			".*" 
 			);
 	
+	
+	/**
+	 * Pattern matching all URLS
+	 * 
+	 * @return Wildcard pattern .*
+	 */
 	@Override
 	public Pattern getServicePattern() {
 		return PATTERN;
 	}
 
+	/**
+	 * Parse, determine content type
+	 * 
+	 * @return True
+	 */
 	@Override
 	public boolean parse() {
 		String type = null;
@@ -46,10 +59,11 @@ public class ServiceParserTypesetter extends ServiceParserPartial {
 		return true;
 	}
 
-	/*
-	 * Determine if URL has a primary focus on an image
-	 * Image urls are most easily identified by common provider URLs 
-	 * @return true if image
+	/**
+	 * Determine if URL has a primary focus on an image; 
+	 * Image urls are most easily identified by common provider URLs
+	 *  
+	 * @return True if image
 	 */
 	private boolean isImage() {
 		boolean isImage = false;
@@ -80,10 +94,11 @@ public class ServiceParserTypesetter extends ServiceParserPartial {
 		return isImage;
 	}
 
-	/*
-	 * Determine if URL has a primary focus on a video
-	 * Video urls are most easily identified by the presence of video meta tags 
-	 * @return true if video
+	/**
+	 * Determine if URL has a primary focus on a video;
+	 * Video urls are most easily identified by the presence of video meta tags
+	 *  
+	 * @return True if video
 	 */	
 	private boolean isVideo() {
 		boolean isVideo = false;

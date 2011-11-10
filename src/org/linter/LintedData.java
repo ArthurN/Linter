@@ -5,20 +5,29 @@ import java.util.Iterator;
 
 import org.apache.log4j.Logger;
 
-/*
+/**
  * Wrapper for Hash to allow easy writing and merging
  */
 public class LintedData {
+	
+	/**
+	 * Log4J Logger
+	 */
 	static protected Logger logger = Logger.getLogger( LintedData.class );
 	
-	// Meta data hash map
-	HashMap<String, Object> _data;
+	/**
+	 *  Meta data hash map
+	 */
+	private HashMap<String, Object> _data;
 	
+	/**
+	 * Constructor
+	 */
 	public LintedData() {
 		_data = new HashMap<String, Object>();
 	}
 
-	/*
+	/**
 	 * Get the meta data hash map
 	 * @return HashMap<String,Object> meta data
 	 */
@@ -26,10 +35,9 @@ public class LintedData {
 		return _data;
 	}
 	
-	/*
-	 * Merge meta data from another parser
-	 * Overwrites existing meta data for like fields.
-	 * @param source Merge data
+	/**
+	 * Merge meta data from another parser, overwrites existing meta data for like fields
+	 * @param source	LintedData to merge with this object 
 	 */	
 	public void mergeLintedData( LintedData source ) {
 
@@ -42,28 +50,28 @@ public class LintedData {
 		}		
 	}
 
-	/*
-	 * Get Object from Meta Data
-	 * @param key
-	 * @return Object
+	/**
+	 * Get object by key
+	 * @param key		Key of object
+	 * @return Object	Object matching key, null if DNE
 	 */
 	public Object get( String key ) {
 		return _data.get( key );
 	}
 	
-	/*
+	/**
 	 * Determine if LintedData has a record matching the key
-	 * @param String key
-	 * @return true if exists
+	 * @param key		Key of object
+	 * @return 			true if object exists in data
 	 */
 	public boolean hasKey( String key ) {
 		return _data.containsKey( key );
 	}
 	
-	/*
-	 * Get Object from Meta Data as String
-	 * @param key
-	 * @return String
+	/**
+	 * Get object by key as String
+	 * @param key		Key of object
+	 * @return 			Object matching key as String, null if DNE
 	 */
 	public String getString( String key ) {
 		String ret = null;
@@ -73,18 +81,18 @@ public class LintedData {
 		return ret;
 	}
 	
-	/*
-	 * Pub Object into Meta Data
-	 * @param key
-	 * @param value
+	/**
+	 * Store object in data, overwrites existing
+	 * @param key		Key of object to store
+	 * @param value		Object to store
 	 */
 	public void put( String key, Object value ) {
 		_data.put( key, value );				
 	}
 	
-	/*
-	 * Write Meta Data to Formatted String
-	 * @return String
+	/**
+	 * Write data to formatted string
+	 * @return Formatted string
 	 */
 	public String getPrettyDebugString() {
 		String ret = new String();

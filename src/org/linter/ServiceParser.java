@@ -10,16 +10,23 @@ import net.htmlparser.jericho.Source;
 import org.apache.log4j.Logger;
 
 /**
- * ServiceParser
- * 
- * Parse meta data from a web page. Abstract class for developing
- * new parsers
+ * Parse meta data from a web page. abstract base class for all parsers
  */
 public abstract class ServiceParser {
 	
+	/**
+	 * Log4J Logger
+	 */
 	static protected Logger logger = Logger.getLogger( ServiceParser.class );
 	
+	/**
+	 * Pattern for determining full vs. relative URLs
+	 */
 	protected static final String RELATIVE_URL_TEST = "://";
+	
+	/**
+	 * Pattern for matching specific parts of a URL
+	 */
 	protected static final Pattern URL_PATTERN = Pattern.compile(
 			"^((\\w+)://)?" +
 			"((\\w+):?(\\w+)?@)?" + 
@@ -31,40 +38,61 @@ public abstract class ServiceParser {
 			"([^#]+)?" +
 			"#?(\\w*)");
 	
-	// Raw HTML
+	/**
+	 *  Raw HTML
+	 */
 	protected InputStream _rawContent = null;
 	
-	// URL
+	/**
+	 *  URL
+	 */
 	protected String _url;
 	
+	/**
+	 * URL redirection list
+	 */
 	protected ArrayList<String> _redirectUrlList;
 	
-	// Error state
+	/**
+	 * Parse error state
+	 */
 	protected String _parseError;
 	
-	// Fallback option for parsing additional content or failure
+	/**
+	 *  Fallback option for parsing additional content or failure
+	 */
 	private ServiceParser _successor;
 	
-	// Jericho Source Parser
+	/**
+	 *  Jericho Source Parser
+	 */
 	protected Source _jerichoSource;
 	
-	// Meta Data
+	/**
+	 *  Meta Data
+	 */
 	protected LintedData _metaData;	
 
 	
+	
+	/**
+	 * Constructor
+	 */
 	public ServiceParser() {		
 		_successor = null;
 		_url = "";
-		//_metaData = new JSONObject();
+
 		_metaData = new LintedData();
 		_metaData.put( "meta_provider", "linter" );
 		_redirectUrlList = null;
 		_parseError = null;
 	}
 
-	/*
-	 * Initialize ServiceParser
+	/**
+	 * Initialize ServiceParser and all successors 
 	 * Not included in constructor for simplicity when dynamically instantiating classes
+	 * 
+	 * @param url	Full URL of web page
 	 */
 	public void initialize(String url) {
 		_url = url;		
@@ -76,47 +104,60 @@ public abstract class ServiceParser {
 		}
 	}
 	
-	/*
-	 * Get the ServicePattern used to match the appropriateness
-	 * of a ServiceParser for a particular URL
+	/**
+	 * Get the ServicePattern used to match the appropriateness of a ServiceParser 
+	 * for a particular URL
+	 * 
 	 * @return Pattern used for determining appropriateness of ServiceParser for a URL
 	 */
 	abstract public Pattern getServicePattern();
 	
-	/*
+	/**
 	 * Parse meta data from raw HTML
+	 * 
 	 * @return boolean true if successful
 	 */
 	abstract public boolean parse();
 	
-	/*
+	/**
 	 * Set the raw HTML used by the parser
-	 * @param InputStream HTML
+	 * @param rawContent	InputStream of HTML source for use with Jericho parser
 	 */
 	public void setRawContent(InputStream rawContent) {
 		_rawContent = rawContent;
 		initJerichoSource();
 	}
 	
-	/*
+	/**
 	 * Set the successor ServiceParser for failure case or extracting additional
-	 * meta data not provided by more specific parsers.
+	 * meta data not provided by more specific parsers
+	 * 
+	 * @param successor	Next parser in the ServiceParser chain of responsibility
 	 */
 	public void setSuccessor(ServiceParser successor) {
 		_successor = successor;
 	}
 	
-	/*
-	 * Set the URL Redirection List
-	 * @param redirectUrlList
+	/**
+	 * Set the URL Redirection List for ServiceParsers that need access to
+	 * all URLs leading to the final, resolved URL
+	 * 
+	 * Sometimes useful for parsers that need to backtrack if the final, resolved
+	 * URL requires login or is behind a paywall
+	 * 
+	 * @param redirectUrlList	List of all redirection URLs leading to current URL
 	 */
 	public void setRedirectUrlList( ArrayList<String> redirectUrlList ) {
 		_redirectUrlList = redirectUrlList;
 	}
 	
-	/*
+	/**
 	 * Continue parsing with successor ServiceParser, if available
-	 * @return true if success, false if failed or end of chainj
+	 * 
+	 * Forwards all meta data to successor and merges back with itself
+	 * on completion
+	 * 
+	 * @return true if success, false if failed or end of chain
 	 */
 	protected boolean parseWithSuccessor() {
 		boolean ret = false;
@@ -134,26 +175,27 @@ public abstract class ServiceParser {
 		return ret;
 	}
 	
-	/*
+	/**
 	 * Set the Jericho Source
-	 * @param Source Jericho source HTML parser
+	 * 
+	 * @param source	Jericho source HTML parser
 	 */
-	public void setJerichoSource(Source source) {
+	public void setJerichoSource( Source source ) {
 		_jerichoSource = source;
 	}
 	
-	/*
-	 * Get the Provider URL from the URL
-	 * @return String provider url
+	/**
+	 * Get the Provider URL from the full URL
+	 * 
+	 * @return Provider url
 	 */
 	public String getProviderUrl() {
 		return getMetaData().getString( "provider_url" );
 	}	
 
 	/**
-	 * Determine the provider name and url from url 
-	 * From: http://www.webtalkforums.com/showthread.php/37600-Simple-JavaScript-RegEx-to-Parse-Domain-Name
-	 * @param url
+	 * Determine the provider name and url from url
+	 * from: http://www.webtalkforums.com/showthread.php/37600-Simple-JavaScript-RegEx-to-Parse-Domain-Name 
 	 */
 	private void parseProviderNameAndUrl() {
 		String providerUrl;
@@ -175,7 +217,7 @@ public abstract class ServiceParser {
 		getMetaData().put( "provider_url", providerUrl );
 	}
 			
-	/*
+	/**
 	 * Initialize Jerichio parser from raw HTML
 	 */
 	private void initJerichoSource() {		
@@ -186,7 +228,7 @@ public abstract class ServiceParser {
 		}
 	}
 	
-	/*
+	/**
 	 * Get current Jericho parser
 	 * @return Jericho parser
 	 */
@@ -194,32 +236,36 @@ public abstract class ServiceParser {
 		return _jerichoSource;
 	}
 
-	/*
+	/**
 	 * Get meta data JSON
-	 * @return Meta data
+	 * 
+	 * @return LintedData with all parsed meta data
 	 */
 	protected LintedData getMetaData() {
 		return _metaData;
 	}	
 	
-	/*
+	/**
 	 * Get Parse Error
-	 * @return String Parse Error
+	 * 
+	 * @return Parse error string
 	 */
 	public String getParseError() {
 		return _parseError;
 	}
 	
-	/*
+	/**
 	 * Set Parse Error
-	 * @param Parse Error
+	 * 
+	 * @param parseError	Parse error string
 	 */
 	protected void setParseError( String parseError ) {
 		_parseError = parseError;
 	}
 
-	/*
+	/**
 	 * Determine if this is a partial parser
+	 * 
 	 * @return true if partial parser
 	 */
 	public boolean isPartialParser() {
@@ -235,18 +281,29 @@ public abstract class ServiceParser {
 		return false;
 	}
 	
-	/*
+	/**
 	 * Set Meta Data
+	 * 
 	 * @param LintedData metaData
 	 */
 	public void setMetaData( LintedData metaData ) {
 		_metaData = metaData;
 	}
 	
+	/**
+	 * Get URL
+	 * 
+	 * @return URL
+	 */
 	public String getUrl() {
 		return _url;
 	}
 	
+	/**
+	 * Get URL redirection list
+	 * 
+	 * @return URL Redirection list
+	 */
 	protected ArrayList<String> getRedirectUrlList() {
 		return _redirectUrlList;
 	}

@@ -13,18 +13,26 @@ import org.apache.log4j.Logger;
  */
 public class ServiceParserChainManager {
 	
-	// Logging
+	/**
+	 * Log4J Logger
+	 */
 	static protected Logger logger = Logger.getLogger( ServiceParserChainManager.class );
 	
-	// Singleton instance
+	/**
+	 *  Singleton instance
+	 */
 	private static ServiceParserChainManager _instance = null;
 
-	// Mapping or registered services and their patterns
+	/**
+	 *  Mapping or registered services and their patterns
+	 */
 	private HashMap<Pattern, Class<?> > _servicePatterns;
 	
-	/*
+	
+	
+	/**
 	 * Get ChainManager Instance
-	 * @return ServiceParserChainManager singleton instance
+	 * @return Singleton instance
 	 */
 	public static ServiceParserChainManager getInstance() {
 		if( _instance == null ) {
@@ -34,15 +42,16 @@ public class ServiceParserChainManager {
 	}
 	
 	/*
-	 * Private constructor
+	 * Constructor, private
 	 */
 	private ServiceParserChainManager() {
 		_servicePatterns = new HashMap<Pattern, Class<?> >();
 	}
 	
-	/*
+	/**
 	 * Register a ServiceParser with the ChainManager
-	 * @param serviceParserClass Class name of ServiceParser type
+	 * 
+	 * @param serviceParserClass	Class name of ServiceParser type
 	 */
 	public void registerServiceParser(Class<?> serviceParserClass) {
 		logger.info( "Registering ServiceParser type: " + serviceParserClass );
@@ -56,10 +65,11 @@ public class ServiceParserChainManager {
 		
 	}
 	
-	/*
+	/**
 	 * Get ServiceParser chain appropriate for URL
-	 * @param url 
-	 * @return ServiceParser all relevant ServiceParsers from registered list
+	 * 
+	 * @param url	URL string 
+	 * @return 		Linked list of all relevant, registered ServiceParsers
 	 */
 	public ServiceParser getServiceParser(String url) {
 		logger.trace( "Determining appropriate ServiceParsers for url: " + url );
@@ -97,9 +107,10 @@ public class ServiceParserChainManager {
 		return ret;
 	}
 	
-	/*
-	 * Link Parser List
+	/**
 	 * Link ServiceParser array into a linked list
+	 * 
+	 * @return All passed ServiceParsers as a linked list
 	 */
 	private ServiceParser linkParserList( ArrayList<ServiceParser> parserList ) {
 		

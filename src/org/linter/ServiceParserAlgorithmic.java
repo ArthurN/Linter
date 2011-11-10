@@ -10,40 +10,54 @@ import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.Source;
 
 
-/*
- * Basic Service Parser
- * Pulls basic meta data from all providers
+/**
+ * Basic ServiceParser, algorithmically pulls basic meta data from all providers
  */
 public class ServiceParserAlgorithmic extends ServiceParser {
 
+	/**
+	 * Logging prefix
+	 */
 	protected String _logPrefix;
+	
+	/**
+	 * URL pattern, wildcard
+	 */
 	private static final Pattern PATTERN = Pattern.compile( 
 			".*" 
 			);
 	
+	
+	
+	/**
+	 * Constructor
+	 */
 	public ServiceParserAlgorithmic() {
 	}
 	
-	/*
+	/**
 	 * Initialize ServiceParser
-	 * Not included in constructor for simplicity when dynamically instantiating classes
+	 * 
+	 * @param url	Full URL
 	 */
 	public void initialize(String url) {
 		super.initialize( url );
 		_logPrefix = "[" + _url + "] ";
 	}
 	
-	/*
-	 * Get generic service pattern
-	 * @return Pattern matching anything
+	/**
+	 * Get generic service pattern matching all URLs
+	 * 
+	 * @return Wildcard pattern .*
 	 */
 	@Override public Pattern getServicePattern() {
 		return PATTERN;
 	}	
 	
 	/*
-	 * Parse meta data
-	 * @return 
+	 * Parse meta data using common meta data fields or algorithms
+	 * 
+	 * @return True if successful 
 	 */
 	@Override public boolean parse() {
 		Source source = getJerichoSource();
@@ -61,6 +75,12 @@ public class ServiceParserAlgorithmic extends ServiceParser {
 		return true;
 	}
 	
+	/**
+	 * Parse page title, store to meta data
+	 * 
+	 * @param source	Jericho HTML parser source
+	 * @return 			True if successful
+	 */	
 	protected boolean parseTitle( Source source ) {
 		logger.trace(_logPrefix + "Scraping page title...");
 		
@@ -85,7 +105,13 @@ public class ServiceParserAlgorithmic extends ServiceParser {
 		
 		return success;
 	}
-	
+
+	/**
+	 * Parse page description, store to meta data
+	 * 
+	 * @param source	Jericho HTML parser source
+	 * @return 			True if successful
+	 */	
 	protected boolean parseDescription( Source source ) {
 		logger.trace(_logPrefix + "Scraping description...");
 		
@@ -130,6 +156,12 @@ public class ServiceParserAlgorithmic extends ServiceParser {
 		return success;
 	}
 	
+	/**
+	 * Parse page Favicon, store to meta data
+	 * 
+	 * @param source	Jericho HTML parser source
+	 * @return 			True if successful
+	 */		
 	protected boolean parseFavIconUrl( Source source ) {
 		logger.trace(_logPrefix + "Scraping favicon URL...");
 		
@@ -173,6 +205,12 @@ public class ServiceParserAlgorithmic extends ServiceParser {
 	}
 
 	
+	/**
+	 * Parse page preview image url, store to meta data
+	 * 
+	 * @param source	Jericho HTML parser source
+	 * @return 			True if successful
+	 */		
 	protected boolean parsePreviewImage( Source source ) {
 		logger.trace( _logPrefix + "Seleceting preview image" );
 		
@@ -226,12 +264,12 @@ public class ServiceParserAlgorithmic extends ServiceParser {
 		return true;
 	}
 
-	/*
-	 * Basic test for valid image preview urls
-	 * Test for null, empty, and '/'
-	 * Relative URLs are acceptable
-	 * @param url Image url
-	 * @return true if valid
+	/**
+	 * Basic test for valid image preview urls, 
+	 * Test for null, empty, and '/', Relative URLs are acceptable
+	 * 
+	 * @param url 		Image url
+	 * @return 			True if valid
 	 */
 	private boolean isPreviewUrlValid( String url ) {
 		boolean valid = false;

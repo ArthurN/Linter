@@ -2,14 +2,17 @@ package org.linter;
 
 import java.util.HashMap;
 
-
+/**
+ * Miscellaneous URL functions 
+ */
 public class URLParser {
 	
-	/*
+	/**
 	 * Remove a list of parameters from a URL
-	 * @param url
-	 * @param removeParameters
-	 * @return String url with removed parameters
+	 * 
+	 * @param url				URL with parameters to remove
+	 * @param removeParameters	List of unwanted parameters to remove
+	 * @return 					Original url with all unwanted parameters removed
 	 */
 	public static String removeParameters( String url, String[] removeParameters ) {		
 		
