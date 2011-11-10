@@ -168,7 +168,6 @@ public class AlgorithmicImageItem {
 			InputStream inputStream = connection.getInputStream();
 			BufferedImage img = ImageIO.read( inputStream );
 			
-			//System.out.println( "Downloaded image width:" + img.getWidth() + " height: " + img.getHeight());
 			_width = img.getWidth();
 			_height = img.getHeight();
 		} catch( Exception e ) {
