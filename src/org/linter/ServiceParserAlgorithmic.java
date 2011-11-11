@@ -245,13 +245,15 @@ public class ServiceParserAlgorithmic extends ServiceParser {
 			imagePreviewUrl = selector.getPreviewUrl();
 			logger.trace( _logPrefix + "Preview image found algorithmically" );			
 		}		
+		
 		// Store meta data
 		if( imagePreviewUrl != null && imagePreviewUrl.length() > 0 ) {
 			
 			// Append provider URL if relative URL
 			if( !imagePreviewUrl.contains(RELATIVE_URL_TEST) ) {
 				String provider = getProviderUrl();
-				if( !provider.endsWith( "/" ) ) {
+				if( !provider.endsWith( "/" ) &&
+					!imagePreviewUrl.startsWith( "/" ) ) {
 					provider += "/";
 				}
 				imagePreviewUrl = provider + imagePreviewUrl;
