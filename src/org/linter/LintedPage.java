@@ -275,7 +275,7 @@ public class LintedPage {
 			if (!contentType.toLowerCase().contains("text/html") && !contentType.toLowerCase().contains("text/plain")) {
 								
 				if( contentType.toLowerCase().contains("image/png") || contentType.toLowerCase().contains("image/jpeg") ) {
-					getMetaData().put( "preview-image-url", this.getDestinationUrl() );
+					getMetaData().put( "preview_image_url", this.getDestinationUrl() );
 					_parseOk = true;
 				}
 				
@@ -515,7 +515,7 @@ public class LintedPage {
 		LintedData data = getMetaData();
 		if( ( data.hasKey( "title" ) && !data.getString( "title" ).isEmpty() ) 
 			&& ( data.hasKey( "description" ) && !data.getString( "description" ).isEmpty() )
-			&& ( data.hasKey( "preview-image-url" ) && !data.getString( "preview-image-url" ).isEmpty() ) ) {
+			&& ( data.hasKey( "preview_image_url" ) && !data.getString( "preview_image_url" ).isEmpty() ) ) {
 			complete = true;
 		}
 		return complete;

@@ -69,7 +69,7 @@ public class ServiceParserTypesetter extends ServiceParserPartial {
 		boolean isImage = false;
 		
 		// Make sure a preview image was found
-		if( getMetaData().get( "preview-image-url" ) != null ) {
+		if( getMetaData().get( "preview_image_url" ) != null ) {
 		
 			final Pattern imageHostPatterns[] = { 
 					Pattern.compile( "http://twitpic\\.com/.*" ), 

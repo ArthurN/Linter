@@ -199,7 +199,7 @@ public class ServiceParserAlgorithmic extends ServiceParser {
 			logger.error(_logPrefix + "Error extracting fav icon URL: ", ex);
 		}
 		
-		getMetaData().put( "favIconUrl", favIconUrl );
+		getMetaData().put( "fav_icon_url", favIconUrl );
 		
 		return success;
 	}
@@ -259,7 +259,7 @@ public class ServiceParserAlgorithmic extends ServiceParser {
 				imagePreviewUrl = provider + imagePreviewUrl;
 			}
 			
-			getMetaData().put( "preview-image-url", imagePreviewUrl );
+			getMetaData().put( "preview_image_url", imagePreviewUrl );
 			logger.trace( _logPrefix + "Preview image url: " + imagePreviewUrl );
 		}
 		
