@@ -24,6 +24,9 @@ public class Linter {
 		
 		logger.info("Running Linter");
 		
+		// Register additional ServiceParsers
+		ServiceParserChainManager.getInstance().registerServiceParser( ServiceParserTypesetter.class );
+		
 		LintedPage lp;
 		for (int i = 0; i < args.length; i++)
 		{
