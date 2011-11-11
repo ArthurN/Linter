@@ -142,7 +142,9 @@ public class AlgorithmicImageItem {
 		
 		if( !_url.isEmpty() ) {
 			int lastPeriod = _url.lastIndexOf( "." );
-			extension = _url.substring( lastPeriod );
+			if( lastPeriod >= 0 ) {
+				extension = _url.substring( lastPeriod );
+			}
 		}
 
 		return extension;
